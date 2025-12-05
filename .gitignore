@@ -1,0 +1,25 @@
+# Node
+backend/node_modules/
+backend/.env
+
+# Flutter
+flutter_admin/build/
+flutter_admin/.dart_tool/
+flutter_admin/.flutter-plugins*
+flutter_admin/.packages
+flutter_admin/pubspec.lock
+flutter_admin/ios/Pods/
+flutter_admin/android/.gradle/
+flutter_admin/android/local.properties
+
+# Android native
+android_streamer/.gradle/
+android_streamer/local.properties
+android_streamer/build/
+android_streamer/app/build/
+android_streamer/*.keystore
+
+# OS/IDE
+.DS_Store
+Thumbs.db
+.vscode/
