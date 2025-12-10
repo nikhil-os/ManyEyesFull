@@ -1,6 +1,10 @@
 # Node
 backend/node_modules/
 backend/.env
+.env
+
+# Root-level Node modules (if present)
+node_modules/
 
 # Flutter
 flutter_admin/build/
@@ -25,6 +29,9 @@ android_app/local.properties
 android_app/build/
 android_app/app/build/
 android_app/.idea/
+
+# Ignore IDE state files
+android_app/.idea/workspace.xml
 
 # OS/IDE
 .DS_Store
