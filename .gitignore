@@ -19,6 +19,13 @@ android_streamer/build/
 android_streamer/app/build/
 android_streamer/*.keystore
 
+# Android app (ManyEyes)
+android_app/.gradle/
+android_app/local.properties
+android_app/build/
+android_app/app/build/
+android_app/.idea/
+
 # OS/IDE
 .DS_Store
 Thumbs.db
