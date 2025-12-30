@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: manyeyes-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm run start
+    envVars:
+      - key: NODE_VERSION
+        value: "22.16.0"
