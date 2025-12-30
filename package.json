@@ -1,7 +1,9 @@
 {
   "name": "manyeyes-root",
   "private": true,
-  "workspaces": ["backend"],
+  "workspaces": [
+    "backend"
+  ],
   "scripts": {
     "start": "npm --workspace backend run start",
     "dev": "npm --workspace backend run dev"
