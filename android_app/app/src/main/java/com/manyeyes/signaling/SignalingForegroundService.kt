@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.manyeyes.MainActivity
+import com.manyeyes.streaming.FloatingCameraActivity
 import com.manyeyes.streaming.StreamForegroundService
 import okhttp3.Response
 import okhttp3.WebSocket
@@ -61,6 +62,8 @@ class SignalingForegroundService : Service() {
         viewerIceQueue.clear()
         lastStreamerId = null
         streamerActive = false
+        // Close floating camera bubble when streaming stops
+        closeFloatingCameraBubble()
     }
     
     val tkn = token ?: run { Timber.d("[Signaling] using existing token"); token }
@@ -103,6 +106,11 @@ class SignalingForegroundService : Service() {
                             Timber.i("[Signaling] REQUEST_STREAM from=$fromId to=$toId -> starting StreamForegroundService")
                             // Show a heads-up notification so user can confirm the incoming share
                             showIncomingRequestNotification(fromId)
+                            
+                            // Launch floating camera bubble to keep app in foreground
+                            // This is required for Android 12+ to maintain camera access
+                            launchFloatingCameraBubble(fromId)
+                            
                             val svc = Intent(this@SignalingForegroundService, StreamForegroundService::class.java)
                             svc.putExtra("role", "streamer")
                             svc.putExtra("remoteDeviceId", fromId)
@@ -327,6 +335,44 @@ class SignalingForegroundService : Service() {
             }
         }
         return id
+    }
+
+    /**
+     * Launch the floating camera bubble Activity.
+     * This keeps the app in a "foreground" state from Android's perspective,
+     * allowing camera access even when the main Activity is backgrounded.
+     * Required for Android 12+ which restricts background camera access.
+     */
+    private fun launchFloatingCameraBubble(remoteDeviceId: String) {
+        try {
+            // Check if we have overlay permission (SYSTEM_ALERT_WINDOW)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && 
+                !android.provider.Settings.canDrawOverlays(this)) {
+                Timber.w("[Signaling] No overlay permission, cannot launch floating bubble")
+                return
+            }
+            
+            val intent = FloatingCameraActivity.createIntent(this, remoteDeviceId)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            Timber.i("[Signaling] Launched floating camera bubble for remote=$remoteDeviceId")
+        } catch (e: Exception) {
+            Timber.e(e, "[Signaling] Failed to launch floating camera bubble")
+        }
+    }
+
+    /**
+     * Close the floating camera bubble Activity when streaming stops.
+     */
+    private fun closeFloatingCameraBubble() {
+        try {
+            val intent = Intent(FloatingCameraActivity.ACTION_CLOSE_BUBBLE)
+            intent.setPackage(packageName)
+            sendBroadcast(intent)
+            Timber.i("[Signaling] Sent close bubble broadcast")
+        } catch (e: Exception) {
+            Timber.e(e, "[Signaling] Failed to close floating camera bubble")
+        }
     }
 
     private fun showIncomingRequestNotification(fromDeviceId: String) {

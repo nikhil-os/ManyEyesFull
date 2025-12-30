@@ -19,7 +19,7 @@ object ServiceBuilder {
             .build()
         val normalized = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
         // Force HTTPS on production Render URL to avoid mixed content and proxy issues
-        val effective = if (normalized.contains("manyeyes.onrender.com") && normalized.startsWith("http://")) {
+        val effective = if (normalized.contains("manyeyes-pxvf.onrender.com") && normalized.startsWith("http://")) {
             normalized.replaceFirst("http://", "https://")
         } else normalized
         val moshi = Moshi.Builder()

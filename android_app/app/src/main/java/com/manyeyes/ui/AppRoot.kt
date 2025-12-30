@@ -40,8 +40,8 @@ fun AppRoot() {
         prefs.baseUrlFlow.collect {
             // Auto-migrate old emulator-only URL to the deployed Render URL
             val migrated = when {
-                it == null -> "https://manyeyes.onrender.com"
-                it.contains("10.0.2.2") -> "https://manyeyes.onrender.com"
+                it == null -> "https://manyeyes-pxvf.onrender.com"
+                it.contains("10.0.2.2") -> "https://manyeyes-pxvf.onrender.com"
                 else -> it
             }
             baseUrl = migrated
@@ -90,7 +90,7 @@ fun LoginScreen(onLoggedIn: (String, String, String) -> Unit) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var deviceName by remember { mutableStateOf(android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL) }
-    var baseUrl by remember { mutableStateOf("https://manyeyes.onrender.com") } // cloud default; change if self-hosting
+    var baseUrl by remember { mutableStateOf("https://manyeyes-pxvf.onrender.com") } // cloud default; change if self-hosting
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     Column(
@@ -509,6 +509,51 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
     }
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
+        // Overlay permission check for Android 12+ floating bubble
+        val context = LocalContext.current
+        var hasOverlayPermission by remember { 
+            mutableStateOf(
+                android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M || 
+                android.provider.Settings.canDrawOverlays(context)
+            )
+        }
+        
+        // Recheck permission when app resumes
+        DisposableEffect(Unit) {
+            onDispose { }
+        }
+        
+        if (!hasOverlayPermission && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        "⚠️ Overlay Permission Required",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "For background camera streaming on Android 12+, please enable 'Display over other apps' permission.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Button(onClick = {
+                        val intent = android.content.Intent(
+                            android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            android.net.Uri.parse("package:${context.packageName}")
+                        )
+                        context.startActivity(intent)
+                    }) {
+                        Text("Grant Permission")
+                    }
+                }
+            }
+        }
+        
         Text("Status: $status")
         Spacer(Modifier.height(12.dp))
         // Remote video renderer

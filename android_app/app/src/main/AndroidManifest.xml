@@ -10,6 +10,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Required for floating bubble/overlay on Android 12+ -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- Required for launching activities from background (Android 14+) -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <application
         android:allowBackup="false"
         android:label="ManyEyes"
@@ -21,6 +25,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Floating camera bubble activity - keeps app in foreground for camera access -->
+        <activity
+            android:name=".streaming.FloatingCameraActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:launchMode="singleInstance"
+            android:theme="@style/Theme.ManyEyes.Floating"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize" />
         <service
             android:name=".streaming.StreamForegroundService"
             android:exported="false"
