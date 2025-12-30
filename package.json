@@ -5,7 +5,8 @@
     "backend"
   ],
   "scripts": {
-    "start": "npm --workspace backend run start",
-    "dev": "npm --workspace backend run dev"
+    "start": "npm --prefix backend run start",
+    "dev": "npm --prefix backend run dev",
+    "build": "npm --prefix backend install"
   }
 }
