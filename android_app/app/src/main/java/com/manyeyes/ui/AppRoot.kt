@@ -40,8 +40,9 @@ fun AppRoot() {
         prefs.baseUrlFlow.collect {
             // Auto-migrate old emulator-only URL to the deployed Render URL
             val migrated = when {
-                it == null -> "https://manyeyes-pxvf.onrender.com"
-                it.contains("10.0.2.2") -> "https://manyeyes-pxvf.onrender.com"
+                it == null -> "https://manyeyes.onrender.com"
+                it.contains("10.0.2.2") -> "https://manyeyes.onrender.com"
+                it.contains("manyeyes-pxvf") -> "https://manyeyes.onrender.com"
                 else -> it
             }
             baseUrl = migrated
@@ -90,7 +91,7 @@ fun LoginScreen(onLoggedIn: (String, String, String) -> Unit) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var deviceName by remember { mutableStateOf(android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL) }
-    var baseUrl by remember { mutableStateOf("https://manyeyes-pxvf.onrender.com") } // cloud default; change if self-hosting
+    var baseUrl by remember { mutableStateOf("https://manyeyes.onrender.com") } // cloud default; change if self-hosting
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     Column(
