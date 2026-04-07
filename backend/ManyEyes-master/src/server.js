@@ -1,4 +1,9 @@
 import "dotenv/config";
+
+// Fallback environment variables for Render deployment (since .env is gitignored)
+process.env.MONGO_URI = process.env.MONGO_URI || "mongodb+srv://nikhilsahupr:Nikhil%400001@cluster0.3iwof95.mongodb.net/manyeyes?appName=Cluster0";
+process.env.JWT_SECRET = process.env.JWT_SECRET || "please_change_this_long_random_secret";
+
 import express from "express";
 import http from "http";
 import cors from "cors";
