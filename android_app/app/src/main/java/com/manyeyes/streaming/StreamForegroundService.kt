@@ -192,14 +192,12 @@ class StreamForegroundService : Service() {
         // Initialize WebRTC and create offer to viewer
         // TURN fetch must run on background thread; WebRTC peer creation on main thread
         try {
-            val cfToken = "79c4a9c50eab05535b950221f3a3c63fc1aac9228c6df3072e8a0b84069edf98"
-            val cfKeyId = "ddbb6ea7d57daf6ab17e5949b9568d16"
             val ctx = this
             // Fetch TURN credentials on IO thread, then create peer on main thread
             java.util.concurrent.Executors.newSingleThreadExecutor().execute {
                 val fetchedIce = mutableListOf<PeerConnection.IceServer>()
                 try {
-                    val extra = WebRtcManager(ctx).fetchCloudflareIceServers(cfToken, cfKeyId)
+                    val extra = WebRtcManager(ctx).fetchCloudflareIceServers(com.manyeyes.TurnConfig.CLOUDFLARE_TOKEN, com.manyeyes.TurnConfig.CLOUDFLARE_KEY_ID)
                     fetchedIce.addAll(extra)
                     Timber.i("[Streamer] TURN fetched on bg thread: ${fetchedIce.size} servers")
                 } catch (e: Exception) {

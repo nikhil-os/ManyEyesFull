@@ -72,11 +72,9 @@ class EmbeddedStreamer(
             val fetchedIce = mutableListOf<PeerConnection.IceServer>()
             try {
                 Timber.i("[EmbeddedStreamer] Fetching TURN credentials...")
-                val cfToken = "79c4a9c50eab05535b950221f3a3c63fc1aac9228c6df3072e8a0b84069edf98"
-                val cfKeyId = "ddbb6ea7d57daf6ab17e5949b9568d16"
                 val tempMgr = WebRtcManager(context)
                 Timber.i("[EmbeddedStreamer] Calling fetchCloudflareIceServers...")
-                val extra = tempMgr.fetchCloudflareIceServers(cfToken, cfKeyId)
+                val extra = tempMgr.fetchCloudflareIceServers(com.manyeyes.TurnConfig.CLOUDFLARE_TOKEN, com.manyeyes.TurnConfig.CLOUDFLARE_KEY_ID)
                 fetchedIce.addAll(extra)
                 val elapsed = System.currentTimeMillis() - startTime
                 Timber.i("[EmbeddedStreamer] TURN fetched in ${elapsed}ms: ${fetchedIce.size} servers")
