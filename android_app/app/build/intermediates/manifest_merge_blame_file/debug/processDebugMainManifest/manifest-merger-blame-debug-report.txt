@@ -9,181 +9,251 @@
 9        android:targetSdkVersion="34" />
 10
 11    <uses-permission android:name="android.permission.INTERNET" />
-11-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:3:5-67
-11-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:3:22-64
+11-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:3:5-67
+11-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:3:22-64
 12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-12-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:4:5-79
-12-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:4:22-76
+12-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:4:5-79
+12-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:4:22-76
 13    <uses-permission android:name="android.permission.CAMERA" />
-13-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:5:5-65
-13-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:5:22-62
+13-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:5:5-65
+13-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:5:22-62
 14    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-14-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:6:5-71
-14-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:6:22-68
+14-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:6:5-71
+14-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:6:22-68
 15    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-15-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:7:5-77
-15-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:7:22-74
+15-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:7:5-77
+15-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:7:22-74
 16    <!-- Android 14+ granular foreground service permissions for declared types -->
 17    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
-17-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:9:5-84
-17-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:9:22-81
+17-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:9:5-84
+17-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:9:22-81
 18    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-18-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:10:5-88
-18-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:10:22-85
+18-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:10:5-88
+18-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:10:22-85
 19    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-19-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:11:5-87
-19-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:11:22-84
+19-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:11:5-87
+19-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:11:22-84
 20    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-20-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:12:5-77
-20-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:12:22-74
-21
-22    <permission
-22-->[androidx.core:core:1.13.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\9a2d165ad91a72db0d65233c9eae815d\transformed\core-1.13.1\AndroidManifest.xml:22:5-24:47
-23        android:name="com.manyeyes.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
-23-->[androidx.core:core:1.13.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\9a2d165ad91a72db0d65233c9eae815d\transformed\core-1.13.1\AndroidManifest.xml:23:9-81
-24        android:protectionLevel="signature" />
-24-->[androidx.core:core:1.13.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\9a2d165ad91a72db0d65233c9eae815d\transformed\core-1.13.1\AndroidManifest.xml:24:9-44
-25
-26    <uses-permission android:name="com.manyeyes.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
-26-->[androidx.core:core:1.13.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\9a2d165ad91a72db0d65233c9eae815d\transformed\core-1.13.1\AndroidManifest.xml:26:5-97
-26-->[androidx.core:core:1.13.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\9a2d165ad91a72db0d65233c9eae815d\transformed\core-1.13.1\AndroidManifest.xml:26:22-94
-27
-28    <application
-28-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:13:5-32:19
-29        android:allowBackup="false"
-29-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:14:9-36
-30        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-30-->[androidx.core:core:1.13.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\9a2d165ad91a72db0d65233c9eae815d\transformed\core-1.13.1\AndroidManifest.xml:28:18-86
-31        android:debuggable="true"
-32        android:extractNativeLibs="false"
-33        android:icon="@android:drawable/sym_def_app_icon"
-33-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:16:9-58
-34        android:label="ManyEyes"
-34-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:15:9-33
-35        android:usesCleartextTraffic="true" >
-35-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:17:9-44
-36        <activity
-36-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:18:9-23:20
-37            android:name="com.manyeyes.MainActivity"
-37-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:18:19-47
-38            android:exported="true" >
-38-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:18:48-71
-39            <intent-filter>
-39-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:19:13-22:29
-40                <action android:name="android.intent.action.MAIN" />
-40-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:20:17-69
-40-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:20:25-66
-41
-42                <category android:name="android.intent.category.LAUNCHER" />
-42-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:21:17-77
-42-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:21:27-74
-43            </intent-filter>
-44        </activity>
-45
-46        <service
-46-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:24:9-27:74
-47            android:name="com.manyeyes.streaming.StreamForegroundService"
-47-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:25:13-62
-48            android:exported="false"
-48-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:26:13-37
-49            android:foregroundServiceType="camera|microphone|dataSync" />
-49-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:27:13-71
-50        <service
-50-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:28:9-31:56
-51            android:name="com.manyeyes.signaling.SignalingForegroundService"
-51-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:29:13-65
-52            android:exported="false"
-52-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:30:13-37
-53            android:foregroundServiceType="dataSync" />
-53-->C:\Users\Nikhil Sahu\OneDrive\Desktop\ManyEyes\android_app\app\src\main\AndroidManifest.xml:31:13-53
-54        <service
-54-->[androidx.camera:camera-camera2:1.3.4] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\81a8986130131450e3966a2882304c31\transformed\jetified-camera-camera2-1.3.4\AndroidManifest.xml:24:9-33:19
-55            android:name="androidx.camera.core.impl.MetadataHolderService"
-55-->[androidx.camera:camera-camera2:1.3.4] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\81a8986130131450e3966a2882304c31\transformed\jetified-camera-camera2-1.3.4\AndroidManifest.xml:25:13-75
-56            android:enabled="false"
-56-->[androidx.camera:camera-camera2:1.3.4] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\81a8986130131450e3966a2882304c31\transformed\jetified-camera-camera2-1.3.4\AndroidManifest.xml:26:13-36
-57            android:exported="false" >
-57-->[androidx.camera:camera-camera2:1.3.4] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\81a8986130131450e3966a2882304c31\transformed\jetified-camera-camera2-1.3.4\AndroidManifest.xml:27:13-37
-58            <meta-data
-58-->[androidx.camera:camera-camera2:1.3.4] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\81a8986130131450e3966a2882304c31\transformed\jetified-camera-camera2-1.3.4\AndroidManifest.xml:30:13-32:89
-59                android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER"
-59-->[androidx.camera:camera-camera2:1.3.4] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\81a8986130131450e3966a2882304c31\transformed\jetified-camera-camera2-1.3.4\AndroidManifest.xml:31:17-103
-60                android:value="androidx.camera.camera2.Camera2Config$DefaultProvider" />
-60-->[androidx.camera:camera-camera2:1.3.4] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\81a8986130131450e3966a2882304c31\transformed\jetified-camera-camera2-1.3.4\AndroidManifest.xml:32:17-86
-61        </service>
-62
-63        <activity
-63-->[androidx.compose.ui:ui-tooling-android:1.6.8] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\8ae83ea451ae3cf3a667e024831a54bd\transformed\jetified-ui-tooling-release\AndroidManifest.xml:23:9-25:39
-64            android:name="androidx.compose.ui.tooling.PreviewActivity"
-64-->[androidx.compose.ui:ui-tooling-android:1.6.8] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\8ae83ea451ae3cf3a667e024831a54bd\transformed\jetified-ui-tooling-release\AndroidManifest.xml:24:13-71
-65            android:exported="true" />
-65-->[androidx.compose.ui:ui-tooling-android:1.6.8] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\8ae83ea451ae3cf3a667e024831a54bd\transformed\jetified-ui-tooling-release\AndroidManifest.xml:25:13-36
-66
-67        <provider
-67-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\faae9a104e99504f16c1226d74884690\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:24:9-32:20
-68            android:name="androidx.startup.InitializationProvider"
-68-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\faae9a104e99504f16c1226d74884690\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:25:13-67
-69            android:authorities="com.manyeyes.androidx-startup"
-69-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\faae9a104e99504f16c1226d74884690\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:26:13-68
-70            android:exported="false" >
-70-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\faae9a104e99504f16c1226d74884690\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:27:13-37
-71            <meta-data
-71-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\faae9a104e99504f16c1226d74884690\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:29:13-31:52
-72                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-72-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\faae9a104e99504f16c1226d74884690\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:30:17-75
-73                android:value="androidx.startup" />
-73-->[androidx.emoji2:emoji2:1.3.0] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\faae9a104e99504f16c1226d74884690\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:31:17-49
-74            <meta-data
-74-->[androidx.lifecycle:lifecycle-process:2.8.4] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\55484dc1b7ef65e990797c8a7fd668ce\transformed\jetified-lifecycle-process-2.8.4\AndroidManifest.xml:29:13-31:52
-75                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-75-->[androidx.lifecycle:lifecycle-process:2.8.4] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\55484dc1b7ef65e990797c8a7fd668ce\transformed\jetified-lifecycle-process-2.8.4\AndroidManifest.xml:30:17-78
-76                android:value="androidx.startup" />
-76-->[androidx.lifecycle:lifecycle-process:2.8.4] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\55484dc1b7ef65e990797c8a7fd668ce\transformed\jetified-lifecycle-process-2.8.4\AndroidManifest.xml:31:17-49
-77            <meta-data
-77-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:29:13-31:52
-78                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-78-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:30:17-85
-79                android:value="androidx.startup" />
-79-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:31:17-49
-80        </provider>
-81
-82        <receiver
-82-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:34:9-52:20
-83            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-83-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:35:13-76
-84            android:directBootAware="false"
-84-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:36:13-44
-85            android:enabled="true"
-85-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:37:13-35
-86            android:exported="true"
-86-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:38:13-36
-87            android:permission="android.permission.DUMP" >
-87-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:39:13-57
-88            <intent-filter>
-88-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:40:13-42:29
-89                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-89-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:41:17-91
-89-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:41:25-88
-90            </intent-filter>
-91            <intent-filter>
-91-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:43:13-45:29
-92                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-92-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:44:17-85
-92-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:44:25-82
-93            </intent-filter>
-94            <intent-filter>
-94-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:46:13-48:29
-95                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-95-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:47:17-88
-95-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:47:25-85
-96            </intent-filter>
-97            <intent-filter>
-97-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:49:13-51:29
-98                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-98-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:50:17-95
-98-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Nikhil Sahu\.gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:50:25-92
-99            </intent-filter>
-100        </receiver>
-101    </application>
-102
-103</manifest>
+20-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:12:5-77
+20-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:12:22-74
+21    <!-- Required for floating bubble/overlay on Android 12+ -->
+22    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+22-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:14:5-78
+22-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:14:22-75
+23    <!-- Required for launching activities from background (Android 14+) -->
+24    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+24-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:16:5-81
+24-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:16:22-78
+25    <!-- Required for BootReceiver to auto-start signaling after reboot -->
+26    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+26-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:18:5-81
+26-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:18:22-78
+27    <!-- Disable camera requirement so app installs on devices without camera -->
+28    <uses-feature
+28-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:20:5-85
+29        android:name="android.hardware.camera"
+29-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:20:19-57
+30        android:required="false" />
+30-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:20:58-82
+31    <uses-feature
+31-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:21:5-95
+32        android:name="android.hardware.camera.autofocus"
+32-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:21:19-67
+33        android:required="false" />
+33-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:21:68-92
+34
+35    <permission
+35-->[androidx.core:core:1.13.1] D:\Gradle\caches\transforms-3\9a2d165ad91a72db0d65233c9eae815d\transformed\core-1.13.1\AndroidManifest.xml:22:5-24:47
+36        android:name="com.manyeyes.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+36-->[androidx.core:core:1.13.1] D:\Gradle\caches\transforms-3\9a2d165ad91a72db0d65233c9eae815d\transformed\core-1.13.1\AndroidManifest.xml:23:9-81
+37        android:protectionLevel="signature" />
+37-->[androidx.core:core:1.13.1] D:\Gradle\caches\transforms-3\9a2d165ad91a72db0d65233c9eae815d\transformed\core-1.13.1\AndroidManifest.xml:24:9-44
+38
+39    <uses-permission android:name="com.manyeyes.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+39-->[androidx.core:core:1.13.1] D:\Gradle\caches\transforms-3\9a2d165ad91a72db0d65233c9eae815d\transformed\core-1.13.1\AndroidManifest.xml:26:5-97
+39-->[androidx.core:core:1.13.1] D:\Gradle\caches\transforms-3\9a2d165ad91a72db0d65233c9eae815d\transformed\core-1.13.1\AndroidManifest.xml:26:22-94
+40
+41    <application
+41-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:23:5-66:19
+42        android:allowBackup="false"
+42-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:24:9-36
+43        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+43-->[androidx.core:core:1.13.1] D:\Gradle\caches\transforms-3\9a2d165ad91a72db0d65233c9eae815d\transformed\core-1.13.1\AndroidManifest.xml:28:18-86
+44        android:debuggable="true"
+45        android:extractNativeLibs="false"
+46        android:icon="@android:drawable/sym_def_app_icon"
+46-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:26:9-58
+47        android:label="ManyEyes"
+47-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:25:9-33
+48        android:usesCleartextTraffic="true" >
+48-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:27:9-44
+49        <activity
+49-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:28:9-33:20
+50            android:name="com.manyeyes.MainActivity"
+50-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:28:19-47
+51            android:exported="true" >
+51-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:28:48-71
+52            <intent-filter>
+52-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:29:13-32:29
+53                <action android:name="android.intent.action.MAIN" />
+53-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:30:17-69
+53-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:30:25-66
+54
+55                <category android:name="android.intent.category.LAUNCHER" />
+55-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:31:17-77
+55-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:31:27-74
+56            </intent-filter>
+57        </activity>
+58        <!-- Floating camera bubble activity - keeps app in foreground for camera access -->
+59        <activity
+59-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:35:9-44:94
+60            android:name="com.manyeyes.streaming.FloatingCameraActivity"
+60-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:36:13-61
+61            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
+61-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:44:13-91
+62            android:excludeFromRecents="true"
+62-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:38:13-46
+63            android:exported="false"
+63-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:37:13-37
+64            android:launchMode="singleInstance"
+64-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:40:13-48
+65            android:showOnLockScreen="true"
+65-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:42:13-44
+66            android:taskAffinity=""
+66-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:39:13-36
+67            android:theme="@style/Theme.ManyEyes.Floating"
+67-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:41:13-59
+68            android:turnScreenOn="true" />
+68-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:43:13-40
+69        <!-- Signaling service — declared with ALL types it may need at runtime -->
+70        <service
+70-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:46:9-49:74
+71            android:name="com.manyeyes.signaling.SignalingForegroundService"
+71-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:47:13-65
+72            android:exported="false"
+72-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:48:13-37
+73            android:foregroundServiceType="camera|microphone|dataSync" />
+73-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:49:13-71
+74        <!-- Stream service (legacy, kept as fallback) -->
+75        <service
+75-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:51:9-54:74
+76            android:name="com.manyeyes.streaming.StreamForegroundService"
+76-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:52:13-62
+77            android:exported="false"
+77-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:53:13-37
+78            android:foregroundServiceType="camera|microphone|dataSync" />
+78-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:54:13-71
+79        <!-- Boot receiver to auto-start signaling after device reboot -->
+80        <receiver
+80-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:56:9-65:20
+81            android:name="com.manyeyes.BootReceiver"
+81-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:57:13-41
+82            android:enabled="true"
+82-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:59:13-35
+83            android:exported="true" >
+83-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:58:13-36
+84            <intent-filter>
+84-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:60:13-64:29
+85                <action android:name="android.intent.action.BOOT_COMPLETED" />
+85-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:61:17-79
+85-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:61:25-76
+86                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+86-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:62:17-82
+86-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:62:25-79
+87                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+87-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:63:17-84
+87-->D:\ManyEyesFull-master\ManyEyesFull-master\android_app\app\src\main\AndroidManifest.xml:63:25-81
+88            </intent-filter>
+89        </receiver>
+90
+91        <service
+91-->[androidx.camera:camera-camera2:1.3.4] D:\Gradle\caches\transforms-3\81a8986130131450e3966a2882304c31\transformed\jetified-camera-camera2-1.3.4\AndroidManifest.xml:24:9-33:19
+92            android:name="androidx.camera.core.impl.MetadataHolderService"
+92-->[androidx.camera:camera-camera2:1.3.4] D:\Gradle\caches\transforms-3\81a8986130131450e3966a2882304c31\transformed\jetified-camera-camera2-1.3.4\AndroidManifest.xml:25:13-75
+93            android:enabled="false"
+93-->[androidx.camera:camera-camera2:1.3.4] D:\Gradle\caches\transforms-3\81a8986130131450e3966a2882304c31\transformed\jetified-camera-camera2-1.3.4\AndroidManifest.xml:26:13-36
+94            android:exported="false" >
+94-->[androidx.camera:camera-camera2:1.3.4] D:\Gradle\caches\transforms-3\81a8986130131450e3966a2882304c31\transformed\jetified-camera-camera2-1.3.4\AndroidManifest.xml:27:13-37
+95            <meta-data
+95-->[androidx.camera:camera-camera2:1.3.4] D:\Gradle\caches\transforms-3\81a8986130131450e3966a2882304c31\transformed\jetified-camera-camera2-1.3.4\AndroidManifest.xml:30:13-32:89
+96                android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER"
+96-->[androidx.camera:camera-camera2:1.3.4] D:\Gradle\caches\transforms-3\81a8986130131450e3966a2882304c31\transformed\jetified-camera-camera2-1.3.4\AndroidManifest.xml:31:17-103
+97                android:value="androidx.camera.camera2.Camera2Config$DefaultProvider" />
+97-->[androidx.camera:camera-camera2:1.3.4] D:\Gradle\caches\transforms-3\81a8986130131450e3966a2882304c31\transformed\jetified-camera-camera2-1.3.4\AndroidManifest.xml:32:17-86
+98        </service>
+99
+100        <activity
+100-->[androidx.compose.ui:ui-tooling-android:1.6.8] D:\Gradle\caches\transforms-3\8ae83ea451ae3cf3a667e024831a54bd\transformed\jetified-ui-tooling-release\AndroidManifest.xml:23:9-25:39
+101            android:name="androidx.compose.ui.tooling.PreviewActivity"
+101-->[androidx.compose.ui:ui-tooling-android:1.6.8] D:\Gradle\caches\transforms-3\8ae83ea451ae3cf3a667e024831a54bd\transformed\jetified-ui-tooling-release\AndroidManifest.xml:24:13-71
+102            android:exported="true" />
+102-->[androidx.compose.ui:ui-tooling-android:1.6.8] D:\Gradle\caches\transforms-3\8ae83ea451ae3cf3a667e024831a54bd\transformed\jetified-ui-tooling-release\AndroidManifest.xml:25:13-36
+103
+104        <provider
+104-->[androidx.emoji2:emoji2:1.3.0] D:\Gradle\caches\transforms-3\faae9a104e99504f16c1226d74884690\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:24:9-32:20
+105            android:name="androidx.startup.InitializationProvider"
+105-->[androidx.emoji2:emoji2:1.3.0] D:\Gradle\caches\transforms-3\faae9a104e99504f16c1226d74884690\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:25:13-67
+106            android:authorities="com.manyeyes.androidx-startup"
+106-->[androidx.emoji2:emoji2:1.3.0] D:\Gradle\caches\transforms-3\faae9a104e99504f16c1226d74884690\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:26:13-68
+107            android:exported="false" >
+107-->[androidx.emoji2:emoji2:1.3.0] D:\Gradle\caches\transforms-3\faae9a104e99504f16c1226d74884690\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:27:13-37
+108            <meta-data
+108-->[androidx.emoji2:emoji2:1.3.0] D:\Gradle\caches\transforms-3\faae9a104e99504f16c1226d74884690\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:29:13-31:52
+109                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+109-->[androidx.emoji2:emoji2:1.3.0] D:\Gradle\caches\transforms-3\faae9a104e99504f16c1226d74884690\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:30:17-75
+110                android:value="androidx.startup" />
+110-->[androidx.emoji2:emoji2:1.3.0] D:\Gradle\caches\transforms-3\faae9a104e99504f16c1226d74884690\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:31:17-49
+111            <meta-data
+111-->[androidx.lifecycle:lifecycle-process:2.8.4] D:\Gradle\caches\transforms-3\55484dc1b7ef65e990797c8a7fd668ce\transformed\jetified-lifecycle-process-2.8.4\AndroidManifest.xml:29:13-31:52
+112                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+112-->[androidx.lifecycle:lifecycle-process:2.8.4] D:\Gradle\caches\transforms-3\55484dc1b7ef65e990797c8a7fd668ce\transformed\jetified-lifecycle-process-2.8.4\AndroidManifest.xml:30:17-78
+113                android:value="androidx.startup" />
+113-->[androidx.lifecycle:lifecycle-process:2.8.4] D:\Gradle\caches\transforms-3\55484dc1b7ef65e990797c8a7fd668ce\transformed\jetified-lifecycle-process-2.8.4\AndroidManifest.xml:31:17-49
+114            <meta-data
+114-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:29:13-31:52
+115                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+115-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:30:17-85
+116                android:value="androidx.startup" />
+116-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:31:17-49
+117        </provider>
+118
+119        <receiver
+119-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:34:9-52:20
+120            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+120-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:35:13-76
+121            android:directBootAware="false"
+121-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:36:13-44
+122            android:enabled="true"
+122-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:37:13-35
+123            android:exported="true"
+123-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:38:13-36
+124            android:permission="android.permission.DUMP" >
+124-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:39:13-57
+125            <intent-filter>
+125-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:40:13-42:29
+126                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+126-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:41:17-91
+126-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:41:25-88
+127            </intent-filter>
+128            <intent-filter>
+128-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:43:13-45:29
+129                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+129-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:44:17-85
+129-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:44:25-82
+130            </intent-filter>
+131            <intent-filter>
+131-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:46:13-48:29
+132                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+132-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:47:17-88
+132-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:47:25-85
+133            </intent-filter>
+134            <intent-filter>
+134-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:49:13-51:29
+135                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+135-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:50:17-95
+135-->[androidx.profileinstaller:profileinstaller:1.3.1] D:\Gradle\caches\transforms-3\62c548a477ca837e613e67b791817324\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:50:25-92
+136            </intent-filter>
+137        </receiver>
+138    </application>
+139
+140</manifest>

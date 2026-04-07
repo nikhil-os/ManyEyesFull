@@ -20,7 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.FlipCameraAndroid
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -320,7 +320,7 @@ fun FloatingBubbleContent(
                         .background(Color(0xFF424242))
                 ) {
                     Icon(
-                        Icons.Default.FlipCameraAndroid,
+                        Icons.Default.Refresh,
                         contentDescription = "Switch Camera",
                         tint = Color.White,
                         modifier = Modifier.size(20.dp)
