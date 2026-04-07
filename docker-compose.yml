@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  mongo:
+    image: mongo:6.0
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: manyeyes
+  backend:
+    build: ./backend
+    depends_on:
+      - mongo
+    environment:
+      PORT: 4000
+      MONGO_URI: mongodb://mongo:27017/manyeyes
+      JWT_SECRET: change_me_in_env
+    ports:
+      - "4000:4000"
+    command: npm run dev
+    volumes:
+      - ./backend:/app
+volumes:
+  mongo_data:

@@ -1,0 +1,12 @@
+{
+  "name": "manyeyes-root",
+  "private": true,
+  "workspaces": [
+    "backend"
+  ],
+  "scripts": {
+    "start": "npm --prefix backend run start",
+    "dev": "npm --prefix backend run dev",
+    "build": "npm --prefix backend install"
+  }
+}

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme -->
+    <style name="Theme.ManyEyes" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+    
+    <!-- Floating bubble theme for camera activity -->
+    <style name="Theme.ManyEyes.Floating" parent="android:Theme.Material.Light.Dialog">
+        <!-- Make the dialog float without background dimming -->
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        
+        <!-- Remove default dialog animations -->
+        <item name="android:windowAnimationStyle">@null</item>
+        
+        <!-- Allow touches outside to pass through -->
+        <item name="android:windowIsTranslucent">true</item>
+        
+        <!-- Make it appear on top -->
+        <item name="android:windowElevation">8dp</item>
+    </style>
+</resources>
