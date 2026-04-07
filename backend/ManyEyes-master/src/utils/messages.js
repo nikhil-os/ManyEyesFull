@@ -10,6 +10,8 @@ export const MessageTypes = {
   REQUEST_LOCATION: "REQUEST_LOCATION",
   LOCATION: "LOCATION",
   STOP_LOCATION: "STOP_LOCATION",
+  SOS: "SOS",
+  BATTERY_STATUS: "BATTERY_STATUS",
 };
 
 export function makeMessage(type, data = {}) {

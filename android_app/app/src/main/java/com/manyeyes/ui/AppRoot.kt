@@ -30,6 +30,12 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import android.content.Context
+import android.os.BatteryManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.media.MediaPlayer
+import android.media.RingtoneManager
 
 @Composable
 fun AppRoot() {
@@ -178,6 +184,15 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
     var remoteSpeed by remember { mutableStateOf(0f) }
     var locationError by remember { mutableStateOf<String?>(null) }
     var showMapDialog by remember { mutableStateOf(false) }
+    // SOS state
+    var showSosAlert by remember { mutableStateOf(false) }
+    var sosFromDevice by remember { mutableStateOf("") }
+    var sosLat by remember { mutableStateOf(0.0) }
+    var sosLng by remember { mutableStateOf(0.0) }
+    // Battery & network status from remote devices
+    val remoteBattery = remember { mutableStateMapOf<String, Int>() }       // deviceId -> battery %
+    val remoteCharging = remember { mutableStateMapOf<String, Boolean>() }   // deviceId -> isCharging
+    val remoteNetwork = remember { mutableStateMapOf<String, String>() }     // deviceId -> network type
 
     // Function to send control commands to the streamer via SignalingForegroundService
     fun sendControlCommand(command: String) {
@@ -302,10 +317,9 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                             val webrtc = com.manyeyes.webrtc.WebRtcManager(ctx, eglBase)
                             webrtc.init()
                             val baseIce = mutableListOf<org.webrtc.PeerConnection.IceServer>()
-                            // Use centralized TURN config
+                            // Use centralized TURN config — reuse the webrtc instance to avoid native leak
                             try {
-                                val extra = com.manyeyes.webrtc.WebRtcManager(ctx, eglBase)
-                                    .fetchCloudflareIceServers(com.manyeyes.TurnConfig.CLOUDFLARE_TOKEN, com.manyeyes.TurnConfig.CLOUDFLARE_KEY_ID)
+                                val extra = webrtc.fetchCloudflareIceServers(com.manyeyes.TurnConfig.CLOUDFLARE_TOKEN, com.manyeyes.TurnConfig.CLOUDFLARE_KEY_ID)
                                 Timber.i("[Viewer] Cloudflare ICE servers fetched: ${extra.size}")
                                 baseIce.addAll(extra)
                             } catch (e: Exception) { Timber.e(e, "[Viewer] TURN fetch failed") }
@@ -428,6 +442,30 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                                 locationError = null
                                 Timber.i("[Viewer] LOCATION from=$fromId lat=$remoteLat lng=$remoteLng acc=$remoteAccuracy")
                             }
+                        }
+                        "SOS" -> {
+                            val fromId = j.optString("fromDeviceId")
+                            sosFromDevice = fromId
+                            sosLat = j.optDouble("latitude", 0.0)
+                            sosLng = j.optDouble("longitude", 0.0)
+                            showSosAlert = true
+                            Timber.w("[Viewer] 🆘 SOS ALERT from=$fromId lat=$sosLat lng=$sosLng")
+                            // Play alarm sound
+                            try {
+                                val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                                    ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                                val ringtone = RingtoneManager.getRingtone(ctx, uri)
+                                ringtone?.play()
+                                // Stop after 5 seconds
+                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ ringtone?.stop() }, 5000)
+                            } catch (e: Exception) { Timber.e(e, "SOS alarm failed") }
+                        }
+                        "BATTERY_STATUS" -> {
+                            val fromId = j.optString("fromDeviceId")
+                            remoteBattery[fromId] = j.optInt("battery", -1)
+                            remoteCharging[fromId] = j.optBoolean("charging", false)
+                            remoteNetwork[fromId] = j.optString("network", "Unknown")
+                            Timber.d("[Viewer] BATTERY_STATUS from=$fromId batt=${remoteBattery[fromId]}% net=${remoteNetwork[fromId]}")
                         }
                         "PRESENCE" -> {
                             // Refresh list
@@ -566,11 +604,42 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                     ) {
                         Text(dev.deviceName, modifier = Modifier.weight(1f), fontWeight = FontWeight.Medium)
                         Text(
-                            if (dev.isOnline) "● Online" else "○ Offline",
-                            color = if (dev.isOnline) Color(0xFF4CAF50) else Color.Gray,
-                            fontSize = 12.sp
-                        )
+                        if (dev.isOnline) "● Online" else "○ Offline",
+                        color = if (dev.isOnline) Color(0xFF4CAF50) else Color.Gray,
+                        fontSize = 12.sp
+                    )
+                }
+                // Battery & Network info row
+                val batt = remoteBattery[dev.deviceId]
+                val charging = remoteCharging[dev.deviceId] ?: false
+                val net = remoteNetwork[dev.deviceId]
+                if (batt != null && batt >= 0) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        val battIcon = when {
+                            charging -> "⚡"
+                            batt <= 15 -> "🪭"
+                            batt <= 50 -> "🔋"
+                            else -> "🔋"
+                        }
+                        val battColor = when {
+                            batt <= 15 -> Color(0xFFE53935)
+                            batt <= 40 -> Color(0xFFFF9800)
+                            else -> Color(0xFF4CAF50)
+                        }
+                        Text("$battIcon ${batt}%", color = battColor, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                        if (net != null) {
+                            val netIcon = when (net) {
+                                "WiFi" -> "📶"
+                                "Cellular" -> "📡"
+                                else -> "🌐"
+                            }
+                            Text("$netIcon $net", color = Color.Gray, fontSize = 11.sp)
+                        }
                     }
+                }
                     Spacer(Modifier.height(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -624,10 +693,97 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                                 fontSize = 12.sp
                             )
                         }
+
+                        // SOS button
+                        Button(
+                            enabled = dev.isOnline,
+                            onClick = {
+                                // Send SOS to ALL paired devices
+                                // First grab current location
+                                try {
+                                    val locClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(ctx)
+                                    if (ctx.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                        locClient.lastLocation.addOnSuccessListener { loc ->
+                                            val lat = loc?.latitude ?: 0.0
+                                            val lng = loc?.longitude ?: 0.0
+                                            // Send SOS to each online device
+                                            devices.filter { it.deviceId != deviceId && it.isOnline }.forEach { d ->
+                                                val sos = """{"type":"SOS","toDeviceId":"${d.deviceId}","latitude":$lat,"longitude":$lng}"""
+                                                wsClient?.send(sos)
+                                            }
+                                            Timber.w("[SOS] Emergency SOS sent! lat=$lat lng=$lng")
+                                        }
+                                    } else {
+                                        // No location, send SOS without coordinates
+                                        devices.filter { it.deviceId != deviceId && it.isOnline }.forEach { d ->
+                                            val sos = """{"type":"SOS","toDeviceId":"${d.deviceId}","latitude":0,"longitude":0}"""
+                                            wsClient?.send(sos)
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    Timber.e(e, "[SOS] Failed to send SOS")
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
+                        ) {
+                            Text("🆘 SOS", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
         }
+    }
+
+    // ─── Periodic battery/network broadcast ──────────────────────────────
+    LaunchedEffect(wsClient) {
+        val ws = wsClient ?: return@LaunchedEffect
+        while (true) {
+            kotlinx.coroutines.delay(10000) // every 10 seconds
+            try {
+                val bm = ctx.getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
+                val battLevel = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
+                val isCharging = bm?.isCharging ?: false
+                val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+                val netType = cm?.activeNetwork?.let { net ->
+                    val caps = cm.getNetworkCapabilities(net)
+                    when {
+                        caps == null -> "None"
+                        caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "WiFi"
+                        caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "Cellular"
+                        caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> "Ethernet"
+                        else -> "Other"
+                    }
+                } ?: "None"
+                val payload = """{"type":"BATTERY_STATUS","battery":$battLevel,"charging":$isCharging,"network":"$netType"}"""
+                ws.send(payload)
+            } catch (_: Exception) {}
+        }
+    }
+
+    // ─── SOS Alert Dialog ────────────────────────────────────────
+    if (showSosAlert) {
+        AlertDialog(
+            onDismissRequest = { showSosAlert = false },
+            containerColor = Color(0xFFB71C1C),
+            title = { Text("🆘 EMERGENCY SOS", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 22.sp) },
+            text = {
+                Column {
+                    Text("SOS sent from device:", color = Color(0xFFFFCDD2), fontSize = 14.sp)
+                    Text(sosFromDevice, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    if (sosLat != 0.0 || sosLng != 0.0) {
+                        Spacer(Modifier.height(8.dp))
+                        Text("Location: %.5f, %.5f".format(sosLat, sosLng), color = Color(0xFFFFCDD2), fontSize = 13.sp)
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showSosAlert = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+                ) { Text("Dismiss", color = Color(0xFFB71C1C)) }
+            }
+        )
     }
 
     // ─── Full-Screen Map Dialog ──────────────────────────────────────────
@@ -712,10 +868,9 @@ fun LocationMapDialog(
             color = MaterialTheme.colorScheme.background
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // Top bar
+                // Top bar — no shadowElevation to prevent flicker on recomposition
                 Surface(
-                    color = Color(0xFF1B5E20),
-                    shadowElevation = 4.dp
+                    color = Color(0xFF1B5E20)
                 ) {
                     Row(
                         modifier = Modifier
