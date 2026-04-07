@@ -3,9 +3,16 @@ package com.manyeyes.ui
 import androidx.compose.runtime.*
 import androidx.compose.material3.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.manyeyes.network.*
 import com.manyeyes.data.Prefs
 import androidx.compose.ui.platform.LocalContext
@@ -18,6 +25,11 @@ import org.json.JSONObject
 import org.webrtc.SurfaceViewRenderer
 import org.webrtc.VideoTrack
 import org.webrtc.EglBase
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 
 @Composable
 fun AppRoot() {
@@ -156,6 +168,16 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
     val pendingViewerIce = remember { mutableListOf<org.webrtc.IceCandidate>() }
     // Track if we're currently viewing a stream
     var isViewingStream by remember { mutableStateOf(false) }
+    // Location tracking state
+    var isTrackingLocation by remember { mutableStateOf(false) }
+    var trackingDeviceId by remember { mutableStateOf<String?>(null) }
+    var trackingDeviceName by remember { mutableStateOf("") }
+    var remoteLat by remember { mutableStateOf(0.0) }
+    var remoteLng by remember { mutableStateOf(0.0) }
+    var remoteAccuracy by remember { mutableStateOf(0f) }
+    var remoteSpeed by remember { mutableStateOf(0f) }
+    var locationError by remember { mutableStateOf<String?>(null) }
+    var showMapDialog by remember { mutableStateOf(false) }
 
     // Function to send control commands to the streamer via SignalingForegroundService
     fun sendControlCommand(command: String) {
@@ -391,6 +413,22 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                             val fromId = j.optString("fromDeviceId")
                             Timber.i("[Viewer] REQUEST_STREAM to=$toId from=$fromId -> handled by Signaling service; UI ignoring")
                         }
+                        "LOCATION" -> {
+                            // Live location update from remote device
+                            val fromId = j.optString("fromDeviceId")
+                            val errMsg = j.optString("error", "")
+                            if (errMsg.isNotEmpty()) {
+                                locationError = errMsg
+                                Timber.w("[Viewer] Location error from=$fromId: $errMsg")
+                            } else {
+                                remoteLat = j.optDouble("latitude", 0.0)
+                                remoteLng = j.optDouble("longitude", 0.0)
+                                remoteAccuracy = j.optDouble("accuracy", 0.0).toFloat()
+                                remoteSpeed = j.optDouble("speed", 0.0).toFloat()
+                                locationError = null
+                                Timber.i("[Viewer] LOCATION from=$fromId lat=$remoteLat lng=$remoteLng acc=$remoteAccuracy")
+                            }
+                        }
                         "PRESENCE" -> {
                             // Refresh list
                             scope.launch { devices = api.devices("Bearer $token") }
@@ -511,21 +549,282 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
         }
 
         Spacer(Modifier.height(12.dp))
-        Text("Devices:")
+        Text("Devices:", fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         devices.filter { it.deviceId != deviceId }.forEach { dev ->
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (dev.isOnline) MaterialTheme.colorScheme.surfaceVariant
+                    else MaterialTheme.colorScheme.surface
+                )
             ) {
-                Text(dev.deviceName, modifier = Modifier.weight(1f))
-                val onlineText = if (dev.isOnline) "Online" else "Offline"
-                Text(onlineText)
-                Spacer(Modifier.width(12.dp))
-                Button(enabled = dev.isOnline, onClick = {
-                    val req = """{"type":"REQUEST_STREAM","toDeviceId":"${dev.deviceId}"}"""
-                    wsClient?.send(req)
-                }) { Text("Monitor Camera") }
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(dev.deviceName, modifier = Modifier.weight(1f), fontWeight = FontWeight.Medium)
+                        Text(
+                            if (dev.isOnline) "● Online" else "○ Offline",
+                            color = if (dev.isOnline) Color(0xFF4CAF50) else Color.Gray,
+                            fontSize = 12.sp
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Monitor Camera button
+                        Button(
+                            enabled = dev.isOnline,
+                            onClick = {
+                                val req = """{"type":"REQUEST_STREAM","toDeviceId":"${dev.deviceId}"}"""
+                                wsClient?.send(req)
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
+                        ) { Text("📷 Camera", fontSize = 12.sp) }
+
+                        // Track Location button
+                        Button(
+                            enabled = dev.isOnline,
+                            onClick = {
+                                if (isTrackingLocation && trackingDeviceId == dev.deviceId) {
+                                    // Already tracking this device, just show the map
+                                    showMapDialog = true
+                                } else {
+                                    // Stop tracking previous device if any
+                                    if (isTrackingLocation && trackingDeviceId != null) {
+                                        val stopReq = """{"type":"STOP_LOCATION","toDeviceId":"$trackingDeviceId"}"""
+                                        wsClient?.send(stopReq)
+                                    }
+                                    // Start tracking new device
+                                    trackingDeviceId = dev.deviceId
+                                    trackingDeviceName = dev.deviceName
+                                    isTrackingLocation = true
+                                    remoteLat = 0.0
+                                    remoteLng = 0.0
+                                    locationError = null
+                                    val req = """{"type":"REQUEST_LOCATION","toDeviceId":"${dev.deviceId}"}"""
+                                    wsClient?.send(req)
+                                    showMapDialog = true
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isTrackingLocation && trackingDeviceId == dev.deviceId)
+                                    Color(0xFFFF9800) else Color(0xFF388E3C)
+                            )
+                        ) {
+                            Text(
+                                if (isTrackingLocation && trackingDeviceId == dev.deviceId) "📍 Tracking..."
+                                else "📍 Location",
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ─── Full-Screen Map Dialog ──────────────────────────────────────────
+    if (showMapDialog) {
+        LocationMapDialog(
+            deviceName = trackingDeviceName,
+            latitude = remoteLat,
+            longitude = remoteLng,
+            accuracy = remoteAccuracy,
+            speed = remoteSpeed,
+            error = locationError,
+            onDismiss = {
+                showMapDialog = false
+            },
+            onStopTracking = {
+                // Send STOP_LOCATION to the remote device
+                if (trackingDeviceId != null) {
+                    val stopReq = """{"type":"STOP_LOCATION","toDeviceId":"$trackingDeviceId"}"""
+                    wsClient?.send(stopReq)
+                }
+                isTrackingLocation = false
+                trackingDeviceId = null
+                trackingDeviceName = ""
+                showMapDialog = false
+                locationError = null
+            }
+        )
+    }
+}
+
+@Composable
+fun LocationMapDialog(
+    deviceName: String,
+    latitude: Double,
+    longitude: Double,
+    accuracy: Float,
+    speed: Float,
+    error: String?,
+    onDismiss: () -> Unit,
+    onStopTracking: () -> Unit
+) {
+    val context = LocalContext.current
+    var mapViewRef by remember { mutableStateOf<MapView?>(null) }
+    var markerRef by remember { mutableStateOf<Marker?>(null) }
+
+    // Configure osmdroid
+    LaunchedEffect(Unit) {
+        Configuration.getInstance().userAgentValue = context.packageName
+    }
+
+    // Update marker when coordinates change
+    LaunchedEffect(latitude, longitude) {
+        val map = mapViewRef ?: return@LaunchedEffect
+        if (latitude == 0.0 && longitude == 0.0) return@LaunchedEffect
+
+        val point = GeoPoint(latitude, longitude)
+
+        if (markerRef == null) {
+            // First location — create marker and center map
+            val marker = Marker(map)
+            marker.position = point
+            marker.title = deviceName
+            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            map.overlays.add(marker)
+            markerRef = marker
+            map.controller.setZoom(17.0)
+            map.controller.animateTo(point)
+        } else {
+            // Update existing marker position
+            markerRef?.position = point
+            map.controller.animateTo(point)
+        }
+        map.invalidate()
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Top bar
+                Surface(
+                    color = Color(0xFF1B5E20),
+                    shadowElevation = 4.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "📍 Live Location",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            )
+                            Text(
+                                "Tracking: $deviceName",
+                                color = Color(0xFFA5D6A7),
+                                fontSize = 13.sp
+                            )
+                        }
+                        Button(
+                            onClick = onStopTracking,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935))
+                        ) {
+                            Text("Stop", fontSize = 12.sp)
+                        }
+                    }
+                }
+
+                // Error banner
+                if (error != null) {
+                    Surface(
+                        color = Color(0xFFFFEBEE),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "⚠️ $error",
+                            color = Color(0xFFC62828),
+                            modifier = Modifier.padding(12.dp),
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+
+                // Waiting state
+                if (latitude == 0.0 && longitude == 0.0 && error == null) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator()
+                            Spacer(Modifier.height(12.dp))
+                            Text("Waiting for GPS signal from $deviceName...", fontSize = 14.sp)
+                            Spacer(Modifier.height(4.dp))
+                            Text("Updates every 5 seconds", color = Color.Gray, fontSize = 12.sp)
+                        }
+                    }
+                }
+
+                // Map view (shows once we have coordinates)
+                Box(modifier = Modifier.weight(1f)) {
+                    AndroidView(
+                        modifier = Modifier.fillMaxSize(),
+                        factory = { ctx ->
+                            MapView(ctx).apply {
+                                setTileSource(TileSourceFactory.MAPNIK)
+                                setMultiTouchControls(true)
+                                controller.setZoom(3.0) // World zoom initially
+                                controller.setCenter(GeoPoint(20.0, 78.0)) // Center on India initially
+                                mapViewRef = this
+                            }
+                        }
+                    )
+                }
+
+                // Bottom info bar with coordinates
+                if (latitude != 0.0 || longitude != 0.0) {
+                    Surface(
+                        color = Color(0xFF212121),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(
+                                    "Lat: %.6f".format(latitude),
+                                    color = Color.White, fontSize = 12.sp
+                                )
+                                Text(
+                                    "Lng: %.6f".format(longitude),
+                                    color = Color.White, fontSize = 12.sp
+                                )
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    "Accuracy: %.0fm".format(accuracy),
+                                    color = Color(0xFF81C784), fontSize = 12.sp
+                                )
+                                Text(
+                                    "Speed: %.1f m/s".format(speed),
+                                    color = Color(0xFF81C784), fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }

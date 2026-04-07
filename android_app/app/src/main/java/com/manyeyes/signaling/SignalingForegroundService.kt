@@ -7,14 +7,17 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.graphics.Color
+import android.location.Location
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
+import com.google.android.gms.location.*
 import com.manyeyes.MainActivity
 import com.manyeyes.TurnConfig
 import com.manyeyes.streaming.FloatingCameraActivity
@@ -50,6 +53,10 @@ class SignalingForegroundService : Service() {
     private val baseReconnectDelay = 2_000L // 2 seconds initial
     // Wake lock to keep CPU alive for signaling
     private var wakeLock: PowerManager.WakeLock? = null
+    // Location tracking
+    private var fusedLocationClient: FusedLocationProviderClient? = null
+    private var locationCallback: LocationCallback? = null
+    private var locationTrackingForDevice: String? = null // which remote device requested our location
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -64,6 +71,8 @@ class SignalingForegroundService : Service() {
         } catch (e: Exception) {
             Timber.e(e, "[Signaling] Failed to acquire wake lock")
         }
+        // Initialize location client
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -161,6 +170,9 @@ class SignalingForegroundService : Service() {
                             "OFFER" -> handleOffer(j, fromId)
                             "SWITCH_CAMERA" -> handleSwitchCamera(fromId)
                             "DISCONNECT" -> handleDisconnect(fromId)
+                            "REQUEST_LOCATION" -> handleRequestLocation(fromId)
+                            "STOP_LOCATION" -> handleStopLocation(fromId)
+                            "LOCATION" -> { /* Viewer receives this — handled in AppRoot UI */ }
                             else -> Timber.d("[Signaling] Unknown type: $msgType")
                         }
                     } catch (t: Throwable) {
@@ -632,8 +644,104 @@ class SignalingForegroundService : Service() {
         nm.notify(NOTIF_ID + 1, n)
     }
 
+    // ─── Location Tracking ───────────────────────────────────────────────
+
+    private fun handleRequestLocation(fromId: String) {
+        Timber.i("[Signaling] REQUEST_LOCATION from=$fromId — starting GPS updates every 5s")
+        locationTrackingForDevice = fromId
+
+        // Check location permission
+        if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Timber.e("[Signaling] Location permission not granted — cannot track")
+            // Send error back
+            val errorPayload = JSONObject().apply {
+                put("type", "LOCATION")
+                put("toDeviceId", fromId)
+                put("fromDeviceId", deviceId)
+                put("error", "Location permission not granted on this device")
+            }.toString()
+            if (wsConnected) wsClient?.send(errorPayload) else outbox += errorPayload
+            return
+        }
+
+        // Upgrade foreground service type to include location
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                var fgsType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC or
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+                if (checkSelfPermission(android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                    fgsType = fgsType or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+                }
+                if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                    fgsType = fgsType or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+                }
+                startForeground(NOTIF_ID, buildNotification(), fgsType)
+                Timber.i("[Signaling] Upgraded FGS type to include location")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "[Signaling] Failed to upgrade FGS type for location")
+        }
+
+        // Stop any existing location updates
+        stopLocationUpdates()
+
+        // Request periodic location updates every 5 seconds
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000L)
+            .setMinUpdateIntervalMillis(3000L)
+            .setWaitForAccurateLocation(false)
+            .build()
+
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                val loc = result.lastLocation ?: return
+                Timber.i("[Signaling] GPS: lat=${loc.latitude} lng=${loc.longitude} acc=${loc.accuracy}m")
+                val targetDevice = locationTrackingForDevice ?: return
+                val payload = JSONObject().apply {
+                    put("type", "LOCATION")
+                    put("toDeviceId", targetDevice)
+                    put("fromDeviceId", deviceId)
+                    put("latitude", loc.latitude)
+                    put("longitude", loc.longitude)
+                    put("accuracy", loc.accuracy.toDouble())
+                    put("altitude", loc.altitude)
+                    put("speed", loc.speed.toDouble())
+                    put("bearing", loc.bearing.toDouble())
+                    put("timestamp", System.currentTimeMillis())
+                }.toString()
+                if (wsConnected) wsClient?.send(payload) else outbox += payload
+                Timber.d("[Signaling] LOCATION sent -> $targetDevice")
+            }
+        }
+
+        try {
+            fusedLocationClient?.requestLocationUpdates(
+                locationRequest,
+                locationCallback!!,
+                Looper.getMainLooper()
+            )
+            Timber.i("[Signaling] Location updates started for remote=$fromId")
+        } catch (e: SecurityException) {
+            Timber.e(e, "[Signaling] SecurityException requesting location updates")
+        }
+    }
+
+    private fun handleStopLocation(fromId: String) {
+        Timber.i("[Signaling] STOP_LOCATION from=$fromId — stopping GPS updates")
+        stopLocationUpdates()
+        locationTrackingForDevice = null
+    }
+
+    private fun stopLocationUpdates() {
+        locationCallback?.let {
+            fusedLocationClient?.removeLocationUpdates(it)
+            Timber.i("[Signaling] Location updates stopped")
+        }
+        locationCallback = null
+    }
+
     override fun onDestroy() {
         Timber.i("[Signaling] Service destroyed")
+        stopLocationUpdates()
         embeddedStreamer?.stopStreaming()
         embeddedStreamer = null
         wsClient?.close()

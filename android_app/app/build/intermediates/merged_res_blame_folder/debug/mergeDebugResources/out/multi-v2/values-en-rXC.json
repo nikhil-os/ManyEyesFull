@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.manyeyes.app-mergeDebugResources-53:/values-en-rXC/values-en-rXC.xml",
+            "outputFile": "com.manyeyes.app-mergeDebugResources-56:/values-en-rXC/values-en-rXC.xml",
             "map": [
                 {
                     "source": "D:\\Gradle\\caches\\transforms-3\\db29ace257725cc4aee682906d3bf2d8\\transformed\\jetified-material3-release\\res\\values-en-rXC\\values-en-rXC.xml",

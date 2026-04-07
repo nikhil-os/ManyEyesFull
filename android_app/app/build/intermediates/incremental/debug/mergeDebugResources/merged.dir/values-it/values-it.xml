@@ -27,6 +27,8 @@
     <string msgid="2650565705514630347" name="abc_shareactionprovider_share_with">"Condividi con"</string>
     <string msgid="9009661856846212431" name="abc_shareactionprovider_share_with_application">"Condividi tramite <ns1:g id="APPLICATION_NAME">%s</ns1:g>"</string>
     <string msgid="6389460216547290468" name="abc_toolbar_collapse_description">"Comprimi"</string>
+    <string name="about">Info</string>
+    <string name="about_message">Questo software usa dati delle mappe forniti da OpenStreetMap.org</string>
     <string msgid="881409763997275156" name="call_notification_answer_action">"Rispondi"</string>
     <string msgid="8793775615905189152" name="call_notification_answer_video_action">"Video"</string>
     <string msgid="3229508546291798546" name="call_notification_decline_action">"Rifiuta"</string>
@@ -36,9 +38,29 @@
     <string msgid="59049573811482460" name="call_notification_screening_text">"Applicazione filtro a chiamata in arrivo"</string>
     <string msgid="406453423630273620" name="close_drawer">"Chiudi il menu di navigazione"</string>
     <string msgid="7573152094250666567" name="close_sheet">"Chiudi il foglio"</string>
+    <string msgid="2523291102206661146" name="common_google_play_services_enable_button">Attiva</string>
+    <string msgid="227660514972886228" name="common_google_play_services_enable_text">%1$s non funzionerà se non attivi Google Play Services.</string>
+    <string msgid="5122002158466380389" name="common_google_play_services_enable_title">Attiva Google Play Services</string>
+    <string msgid="7153882981874058840" name="common_google_play_services_install_button">Installa</string>
+    <string name="common_google_play_services_install_text">L\'app %1$s non funzionerà senza Google Play Services, non presente sul tuo dispositivo.</string>
+    <string msgid="7215213145546190223" name="common_google_play_services_install_title">Installa Google Play Services</string>
+    <string name="common_google_play_services_notification_channel_name">Disponibilità di Google Play Services</string>
+    <string name="common_google_play_services_notification_ticker">Errore Google Play Services</string>
+    <string name="common_google_play_services_unknown_issue">%1$s sta riscontrando problemi con Google Play Services. Riprova.</string>
+    <string name="common_google_play_services_unsupported_text">%1$s non funzionerà senza Google Play Services, non supportati dal tuo dispositivo.</string>
+    <string msgid="6556509956452265614" name="common_google_play_services_update_button">Aggiorna</string>
+    <string msgid="9053896323427875356" name="common_google_play_services_update_text">%1$s non funzionerà se non aggiorni Google Play Services.</string>
+    <string msgid="6006316683626838685" name="common_google_play_services_update_title">Aggiorna Google Play Services</string>
+    <string name="common_google_play_services_updating_text">%1$s non funzionerà senza Google Play Services, attualmente in fase di aggiornamento.</string>
+    <string name="common_google_play_services_wear_update_text">È richiesta una nuova versione di Google Play Services. L\'aggiornamento automatico verrà eseguito a breve.</string>
+    <string name="common_open_on_phone">Apri sul telefono</string>
+    <string name="common_signin_button_text">Accedi</string>
+    <string name="common_signin_button_text_long">Accedi con Google</string>
+    <string name="cyclemap">Mappa ciclistica</string>
     <string msgid="8038256446254964252" name="default_error_message">"Valore non valido"</string>
     <string msgid="6312721426453364202" name="default_popup_window_title">"Finestra popup"</string>
     <string msgid="1890207353314751437" name="dropdown_menu">"Menu a discesa"</string>
+    <string name="hills">Rilievo</string>
     <string msgid="6827826412747255547" name="in_progress">"In corso"</string>
     <string msgid="7933458017204019916" name="indeterminate">"Elemento parzialmente selezionato"</string>
     <string msgid="2988463736136100848" name="m3c_bottom_sheet_collapse_description">"Comprimi il riquadro inferiore"</string>
@@ -97,6 +119,8 @@
     <string msgid="6616362054113087709" name="m3c_time_picker_pm">"PM"</string>
     <string msgid="1805687647081129904" name="m3c_tooltip_long_press_label">"Mostra descrizione comando"</string>
     <string msgid="5460405025248574620" name="m3c_tooltip_pane_description">"Descrizione comando"</string>
+    <string name="map_mode">Tipo mappa</string>
+    <string name="my_location">La mia posizione</string>
     <string msgid="542007171693138492" name="navigation_menu">"Menu di navigazione"</string>
     <string msgid="6610465462668679431" name="not_selected">"Opzione non selezionata"</string>
     <string msgid="875452955155264703" name="off">"Off"</string>
@@ -111,4 +135,6 @@
     <string msgid="5946805113151406391" name="template_percent">"<ns1:g id="PERCENTAGE">%1$d</ns1:g> percento."</string>
     <string msgid="3765533235322692011" name="tooltip_description">"Descrizione comando"</string>
     <string msgid="3124740595719787496" name="tooltip_label">"Mostra descrizione comando"</string>
+    <string name="topo">Sentieri</string>
+    <string name="unknown">Sconosciuta</string>
 </resources>

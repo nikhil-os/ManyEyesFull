@@ -24,6 +24,11 @@
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <!-- Required for BootReceiver to auto-start signaling after reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Location tracking permissions -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <!-- Disable camera requirement so app installs on devices without camera -->
     <uses-feature
         android:name="android.hardware.camera"
@@ -37,6 +42,24 @@
         android:protectionLevel="signature" />
 
     <uses-permission android:name="com.manyeyes.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+
+    <supports-screens
+        android:anyDensity="true"
+        android:largeScreens="true"
+        android:normalScreens="true" />
+
+    <uses-feature
+        android:name="android.hardware.location.network"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location.gps"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.wifi"
+        android:required="false" />
 
     <application
         android:allowBackup="false"
@@ -70,7 +93,7 @@
         <service
             android:name="com.manyeyes.signaling.SignalingForegroundService"
             android:exported="false"
-            android:foregroundServiceType="camera|microphone|dataSync" />
+            android:foregroundServiceType="camera|microphone|dataSync|location" />
         <!-- Stream service (legacy, kept as fallback) -->
         <service
             android:name="com.manyeyes.streaming.StreamForegroundService"
@@ -96,6 +119,15 @@
                 android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER"
                 android:value="androidx.camera.camera2.Camera2Config$DefaultProvider" />
         </service>
+
+        <activity
+            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
 
         <activity
             android:name="androidx.compose.ui.tooling.PreviewActivity"

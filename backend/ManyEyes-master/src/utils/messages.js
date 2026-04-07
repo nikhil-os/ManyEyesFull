@@ -7,6 +7,9 @@ export const MessageTypes = {
   STOP_STREAM: "STOP_STREAM",
   DISCONNECT: "DISCONNECT",
   PRESENCE: "PRESENCE",
+  REQUEST_LOCATION: "REQUEST_LOCATION",
+  LOCATION: "LOCATION",
+  STOP_LOCATION: "STOP_LOCATION",
 };
 
 export function makeMessage(type, data = {}) {

@@ -88,12 +88,14 @@ attr buttonCompat
 attr buttonGravity
 attr buttonIconDimen
 attr buttonPanelSideLayout
+attr buttonSize
 attr buttonStyle
 attr buttonStyleSmall
 attr buttonTint
 attr buttonTintMode
 attr checkboxStyle
 attr checkedTextViewStyle
+attr circleCrop
 attr closeIcon
 attr closeItemLayout
 attr collapseContentDescription
@@ -108,6 +110,7 @@ attr colorControlNormal
 attr colorError
 attr colorPrimary
 attr colorPrimaryDark
+attr colorScheme
 attr colorSwitchThumbNormal
 attr commitIcon
 attr contentDescription
@@ -168,6 +171,8 @@ attr icon
 attr iconTint
 attr iconTintMode
 attr iconifiedByDefault
+attr imageAspectRatio
+attr imageAspectRatioAdjust
 attr imageButtonStyle
 attr implementationMode
 attr indeterminateProgressStyle
@@ -226,6 +231,7 @@ attr ratingBarStyle
 attr ratingBarStyleIndicator
 attr ratingBarStyleSmall
 attr scaleType
+attr scopeUris
 attr searchHintIcon
 attr searchIcon
 attr searchViewStyle
@@ -353,6 +359,17 @@ color button_material_dark
 color button_material_light
 color call_notification_answer_color
 color call_notification_decline_color
+color common_google_signin_btn_text_dark
+color common_google_signin_btn_text_dark_default
+color common_google_signin_btn_text_dark_disabled
+color common_google_signin_btn_text_dark_focused
+color common_google_signin_btn_text_dark_pressed
+color common_google_signin_btn_text_light
+color common_google_signin_btn_text_light_default
+color common_google_signin_btn_text_light_disabled
+color common_google_signin_btn_text_light_focused
+color common_google_signin_btn_text_light_pressed
+color common_google_signin_btn_tint
 color dim_foreground_disabled_material_dark
 color dim_foreground_disabled_material_light
 color dim_foreground_material_dark
@@ -604,20 +621,54 @@ drawable abc_textfield_search_activated_mtrl_alpha
 drawable abc_textfield_search_default_mtrl_alpha
 drawable abc_textfield_search_material
 drawable abc_vector_test
+drawable bonuspack_bubble
 drawable btn_checkbox_checked_mtrl
 drawable btn_checkbox_checked_to_unchecked_mtrl_animation
 drawable btn_checkbox_unchecked_mtrl
 drawable btn_checkbox_unchecked_to_checked_mtrl_animation
+drawable btn_moreinfo
 drawable btn_radio_off_mtrl
 drawable btn_radio_off_to_on_mtrl_animation
 drawable btn_radio_on_mtrl
 drawable btn_radio_on_to_off_mtrl_animation
+drawable center
+drawable common_full_open_on_phone
+drawable common_google_signin_btn_icon_dark
+drawable common_google_signin_btn_icon_dark_focused
+drawable common_google_signin_btn_icon_dark_normal
+drawable common_google_signin_btn_icon_dark_normal_background
+drawable common_google_signin_btn_icon_disabled
+drawable common_google_signin_btn_icon_light
+drawable common_google_signin_btn_icon_light_focused
+drawable common_google_signin_btn_icon_light_normal
+drawable common_google_signin_btn_icon_light_normal_background
+drawable common_google_signin_btn_text_dark
+drawable common_google_signin_btn_text_dark_focused
+drawable common_google_signin_btn_text_dark_normal
+drawable common_google_signin_btn_text_dark_normal_background
+drawable common_google_signin_btn_text_disabled
+drawable common_google_signin_btn_text_light
+drawable common_google_signin_btn_text_light_focused
+drawable common_google_signin_btn_text_light_normal
+drawable common_google_signin_btn_text_light_normal_background
+drawable googleg_disabled_color_18
+drawable googleg_standard_color_18
 drawable ic_call_answer
 drawable ic_call_answer_low
 drawable ic_call_answer_video
 drawable ic_call_answer_video_low
 drawable ic_call_decline
 drawable ic_call_decline_low
+drawable ic_menu_compass
+drawable ic_menu_mapmode
+drawable ic_menu_mylocation
+drawable ic_menu_offline
+drawable marker_default
+drawable marker_default_focused_base
+drawable moreinfo_arrow
+drawable moreinfo_arrow_pressed
+drawable navto_small
+drawable next
 drawable notification_action_background
 drawable notification_bg
 drawable notification_bg_low
@@ -631,8 +682,20 @@ drawable notification_template_icon_bg
 drawable notification_template_icon_low_bg
 drawable notification_tile_bg
 drawable notify_panel_notification_icon_bg
+drawable osm_ic_center_map
+drawable osm_ic_follow_me
+drawable osm_ic_follow_me_on
+drawable osm_ic_ic_map_ortho
+drawable person
+drawable previous
+drawable round_navigation_white_48
+drawable sharp_add_black_36
+drawable sharp_remove_black_36
 drawable tooltip_frame_dark
 drawable tooltip_frame_light
+drawable twotone_navigation_black_48
+drawable zoom_in
+drawable zoom_out
 id ALT
 id CTRL
 id FUNCTION
@@ -692,13 +755,21 @@ id action_text
 id actions
 id activity_chooser_view_content
 id add
+id adjust_height
+id adjust_width
 id alertTitle
 id always
 id androidx_compose_ui_view_composition_context
 id async
+id auto
 id beginning
 id blocking
 id bottom
+id bubble_description
+id bubble_image
+id bubble_moreinfo
+id bubble_subdescription
+id bubble_title
 id buttonPanel
 id center_vertical
 id checkbox
@@ -712,6 +783,7 @@ id content
 id contentPanel
 id custom
 id customPanel
+id dark
 id decor_content_parent
 id default_activity_button
 id dialog_button
@@ -735,12 +807,14 @@ id home
 id homeAsUp
 id icon
 id icon_group
+id icon_only
 id ifRoom
 id image
 id info
 id inspection_slot_table_set
 id is_pooling_container_tag
 id italic
+id light
 id line1
 id line3
 id listMode
@@ -789,6 +863,7 @@ id split_action_bar
 id src_atop
 id src_in
 id src_over
+id standard
 id submenuarrow
 id submit_area
 id tabMode
@@ -823,6 +898,7 @@ id view_tree_lifecycle_owner
 id view_tree_on_back_pressed_dispatcher_owner
 id view_tree_saved_state_registry_owner
 id view_tree_view_model_store_owner
+id wide
 id withText
 id wrap_content
 id wrapped_composition_tag
@@ -830,6 +906,7 @@ integer abc_config_activityDefaultDur
 integer abc_config_activityShortDur
 integer cancel_button_image_alpha
 integer config_tooltipAnimTime
+integer google_play_services_version
 integer status_bar_notification_info_maxnum
 interpolator btn_checkbox_checked_mtrl_animation_interpolator_0
 interpolator btn_checkbox_checked_mtrl_animation_interpolator_1
@@ -866,6 +943,7 @@ layout abc_search_dropdown_item_icons_2line
 layout abc_search_view
 layout abc_select_dialog_material
 layout abc_tooltip
+layout bonuspack_bubble
 layout custom_dialog
 layout ime_base_split_test_activity
 layout ime_secondary_split_test_activity
@@ -906,7 +984,22 @@ string abc_searchview_description_voice
 string abc_shareactionprovider_share_with
 string abc_shareactionprovider_share_with_application
 string abc_toolbar_collapse_description
+string about
+string about_message
 string androidx_startup
+string base
+string base_nl
+string bing
+string cacheManagerCancelBody
+string cacheManagerCancelTitle
+string cacheManagerCleanFailed
+string cacheManagerCleaningTitle
+string cacheManagerDownloadingTitle
+string cacheManagerFailed
+string cacheManagerHandlingMessage
+string cacheManagerNo
+string cacheManagerUnsupportedSource
+string cacheManagerYes
 string call_notification_answer_action
 string call_notification_answer_video_action
 string call_notification_decline_action
@@ -916,9 +1009,43 @@ string call_notification_ongoing_text
 string call_notification_screening_text
 string close_drawer
 string close_sheet
+string common_google_play_services_enable_button
+string common_google_play_services_enable_text
+string common_google_play_services_enable_title
+string common_google_play_services_install_button
+string common_google_play_services_install_text
+string common_google_play_services_install_title
+string common_google_play_services_notification_channel_name
+string common_google_play_services_notification_ticker
+string common_google_play_services_unknown_issue
+string common_google_play_services_unsupported_text
+string common_google_play_services_update_button
+string common_google_play_services_update_text
+string common_google_play_services_update_title
+string common_google_play_services_updating_text
+string common_google_play_services_wear_update_text
+string common_open_on_phone
+string common_signin_button_text
+string common_signin_button_text_long
+string compass
+string cyclemap
 string default_error_message
 string default_popup_window_title
 string dropdown_menu
+string fiets_nl
+string first_fix_message
+string format_distance_feet
+string format_distance_kilometers
+string format_distance_meters
+string format_distance_miles
+string format_distance_nautical_miles
+string format_distance_only_foot
+string format_distance_only_kilometer
+string format_distance_only_meter
+string format_distance_only_mile
+string format_distance_only_nautical_mile
+string format_distance_value_unit
+string hills
 string in_progress
 string indeterminate
 string m3c_bottom_sheet_collapse_description
@@ -977,20 +1104,38 @@ string m3c_time_picker_period_toggle_description
 string m3c_time_picker_pm
 string m3c_tooltip_long_press_label
 string m3c_tooltip_pane_description
+string map_mode
+string mapbox
+string mapnik
+string mapquest_aerial
+string mapquest_osm
+string my_location
 string navigation_menu
 string not_selected
 string off
+string offline
 string on
+string public_transport
 string range_end
 string range_start
+string roads_nl
+string samples
 string search_menu_title
 string selected
+string set_mode_hide_me
+string set_mode_offline
+string set_mode_online
+string set_mode_show_me
+string snapshot
+string states
 string status_bar_notification_info_overflow
 string switch_role
 string tab
 string template_percent
 string tooltip_description
 string tooltip_label
+string topo
+string unknown
 style AlertDialog_AppCompat
 style AlertDialog_AppCompat_Light
 style Animation_AppCompat_Dialog
@@ -1372,6 +1517,7 @@ styleable GradientColorItem android_color android_offset
 styleable LinearLayoutCompat android_gravity android_orientation android_baselineAligned android_baselineAlignedChildIndex android_weightSum divider dividerPadding measureWithLargestChild showDividers
 styleable LinearLayoutCompat_Layout android_layout_gravity android_layout_width android_layout_height android_layout_weight
 styleable ListPopupWindow android_dropDownHorizontalOffset android_dropDownVerticalOffset
+styleable LoadingImageView circleCrop imageAspectRatio imageAspectRatioAdjust
 styleable MenuGroup android_enabled android_id android_visible android_menuCategory android_orderInCategory android_checkableBehavior
 styleable MenuItem android_icon android_enabled android_id android_checked android_visible android_menuCategory android_orderInCategory android_title android_titleCondensed android_alphabeticShortcut android_numericShortcut android_checkable android_onClick actionLayout actionProviderClass actionViewClass alphabeticModifiers contentDescription iconTint iconTintMode numericModifiers showAsAction tooltipText
 styleable MenuView android_windowAnimationStyle android_itemTextAppearance android_horizontalDivider android_verticalDivider android_headerBackground android_itemBackground android_itemIconDisabledAlpha preserveIconSpacing subMenuArrow
@@ -1380,6 +1526,7 @@ styleable PopupWindowBackgroundState state_above_anchor
 styleable PreviewView implementationMode scaleType
 styleable RecycleListView paddingBottomNoButtons paddingTopNoTitle
 styleable SearchView android_focusable android_maxWidth android_inputType android_imeOptions closeIcon commitIcon defaultQueryHint goIcon iconifiedByDefault layout queryBackground queryHint searchHintIcon searchIcon submitBackground suggestionRowLayout voiceIcon
+styleable SignInButton buttonSize colorScheme scopeUris
 styleable Spinner android_entries android_popupBackground android_prompt android_dropDownWidth popupTheme
 styleable StateListDrawable android_dither android_visible android_variablePadding android_constantSize android_enterFadeDuration android_exitFadeDuration
 styleable StateListDrawableItem android_drawable

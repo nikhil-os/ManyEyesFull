@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.manyeyes.app-mergeDebugResources-53:/values-en-rIN/values-en-rIN.xml",
+            "outputFile": "com.manyeyes.app-mergeDebugResources-56:/values-en-rIN/values-en-rIN.xml",
             "map": [
                 {
                     "source": "D:\\Gradle\\caches\\transforms-3\\385ef877c6e0513bf9dde39ed23d3f6c\\transformed\\jetified-ui-release\\res\\values-en-rIN\\values-en-rIN.xml",

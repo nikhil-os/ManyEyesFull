@@ -80,6 +80,12 @@ dependencies {
     // Logging
     implementation("com.jakewharton.timber:timber:5.0.1")
 
+    // Location tracking (free — no API key needed)
+    implementation("com.google.android.gms:play-services-location:21.2.0")
+
+    // OpenStreetMap — free map display (no API key needed)
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
+
     // Permissions helper (Accompanist optional) - keep simple with native APIs
 
     // Testing
