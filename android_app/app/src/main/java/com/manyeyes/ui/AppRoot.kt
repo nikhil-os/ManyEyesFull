@@ -211,6 +211,11 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
     var screenStreamerId by remember { mutableStateOf<String?>(null) }
     var webrtcScreenViewer by remember { mutableStateOf<com.manyeyes.webrtc.WebRtcManager?>(null) }
     val pendingScreenIce = remember { mutableListOf<org.webrtc.IceCandidate>() }
+    // Notification state
+    var showNotifDialog by remember { mutableStateOf(false) }
+    var notifDeviceId by remember { mutableStateOf<String?>(null) }
+    var notifDeviceName by remember { mutableStateOf("") }
+    var notifList by remember { mutableStateOf<List<org.json.JSONObject>>(emptyList()) }
 
     // Function to send control commands to the streamer via SignalingForegroundService
     fun sendControlCommand(command: String) {
@@ -595,6 +600,26 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                             screenStreamerId = null
                             videoDebug = "Screen share ended"
                         }
+                        "NOTIFICATION_DATA" -> {
+                            val arr = j.optJSONArray("notifications")
+                            val list = mutableListOf<org.json.JSONObject>()
+                            if (arr != null) {
+                                for (i in 0 until arr.length()) {
+                                    list.add(arr.getJSONObject(i))
+                                }
+                            }
+                            notifList = list
+                        }
+                        "NOTIFICATION_NEW" -> {
+                            val notifStr = j.optString("notification", "")
+                            if (notifStr.isNotEmpty()) {
+                                try {
+                                    val newNotif = org.json.JSONObject(notifStr)
+                                    // Add to top
+                                    notifList = listOf(newNotif) + notifList
+                                } catch (e: Exception) {}
+                            }
+                        }
                         "PRESENCE" -> {
                             // Refresh list
                             scope.launch { devices = api.devices("Bearer $token") }
@@ -784,106 +809,133 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                         }
                     }
                 }
-                    Spacer(Modifier.height(8.dp))
-                    Row(
+                      Spacer(Modifier.height(8.dp))
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // Monitor Camera button
-                        Button(
-                            enabled = dev.isOnline,
-                            onClick = {
-                                val req = """{"type":"REQUEST_STREAM","toDeviceId":"${dev.deviceId}"}"""
-                                wsClient?.send(req)
-                            },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
-                        ) { Text("📷 Camera", fontSize = 11.sp) }
-
-                        // Screen Share button
-                        Button(
-                            enabled = dev.isOnline,
-                            onClick = {
-                                val req = """{"type":"REQUEST_SCREEN","toDeviceId":"${dev.deviceId}"}"""
-                                wsClient?.send(req)
-                                Timber.i("[Viewer] REQUEST_SCREEN sent to ${dev.deviceId}")
-                            },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7B1FA2))
-                        ) { Text("🖥 Screen", fontSize = 11.sp) }
-
-                        // Track Location button
-                        Button(
-                            enabled = dev.isOnline,
-                            onClick = {
-                                if (isTrackingLocation && trackingDeviceId == dev.deviceId) {
-                                    // Already tracking this device, just show the map
-                                    showMapDialog = true
-                                } else {
-                                    // Stop tracking previous device if any
-                                    if (isTrackingLocation && trackingDeviceId != null) {
-                                        val stopReq = """{"type":"STOP_LOCATION","toDeviceId":"$trackingDeviceId"}"""
-                                        wsClient?.send(stopReq)
-                                    }
-                                    // Start tracking new device
-                                    trackingDeviceId = dev.deviceId
-                                    trackingDeviceName = dev.deviceName
-                                    isTrackingLocation = true
-                                    remoteLat = 0.0
-                                    remoteLng = 0.0
-                                    locationError = null
-                                    val req = """{"type":"REQUEST_LOCATION","toDeviceId":"${dev.deviceId}"}"""
-                                    wsClient?.send(req)
-                                    showMapDialog = true
-                                }
-                            },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isTrackingLocation && trackingDeviceId == dev.deviceId)
-                                    Color(0xFFFF9800) else Color(0xFF388E3C)
-                            )
+                        // Row 1: Camera, Screen, Location
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text(
-                                if (isTrackingLocation && trackingDeviceId == dev.deviceId) "📍 Tracking..."
-                                else "📍 Location",
-                                fontSize = 12.sp
-                            )
-                        }
+                            // Monitor Camera button
+                            Button(
+                                enabled = dev.isOnline,
+                                onClick = {
+                                    val req = """{"type":"REQUEST_STREAM","toDeviceId":"${dev.deviceId}"}"""
+                                    wsClient?.send(req)
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
+                            ) { Text("📷 Camera", fontSize = 11.sp) }
 
-                        // SOS button
-                        Button(
-                            enabled = dev.isOnline,
-                            onClick = {
-                                // Send SOS to ALL paired devices
-                                // First grab current location
-                                try {
-                                    val locClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(ctx)
-                                    if (ctx.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                                        locClient.lastLocation.addOnSuccessListener { loc ->
-                                            val lat = loc?.latitude ?: 0.0
-                                            val lng = loc?.longitude ?: 0.0
-                                            // Send SOS to each online device
+                            // Screen Share button
+                            Button(
+                                enabled = dev.isOnline,
+                                onClick = {
+                                    val req = """{"type":"REQUEST_SCREEN","toDeviceId":"${dev.deviceId}"}"""
+                                    wsClient?.send(req)
+                                    Timber.i("[Viewer] REQUEST_SCREEN sent to ${dev.deviceId}")
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7B1FA2))
+                            ) { Text("🖥 Screen", fontSize = 11.sp) }
+
+                            // Track Location button
+                            Button(
+                                enabled = dev.isOnline,
+                                onClick = {
+                                    if (isTrackingLocation && trackingDeviceId == dev.deviceId) {
+                                        // Already tracking this device, just show the map
+                                        showMapDialog = true
+                                    } else {
+                                        // Stop tracking previous device if any
+                                        if (isTrackingLocation && trackingDeviceId != null) {
+                                            val stopReq = """{"type":"STOP_LOCATION","toDeviceId":"$trackingDeviceId"}"""
+                                            wsClient?.send(stopReq)
+                                        }
+                                        // Start tracking new device
+                                        trackingDeviceId = dev.deviceId
+                                        trackingDeviceName = dev.deviceName
+                                        isTrackingLocation = true
+                                        remoteLat = 0.0
+                                        remoteLng = 0.0
+                                        locationError = null
+                                        val req = """{"type":"REQUEST_LOCATION","toDeviceId":"${dev.deviceId}"}"""
+                                        wsClient?.send(req)
+                                        showMapDialog = true
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (isTrackingLocation && trackingDeviceId == dev.deviceId)
+                                        Color(0xFFFF9800) else Color(0xFF388E3C)
+                                )
+                            ) {
+                                Text(
+                                    if (isTrackingLocation && trackingDeviceId == dev.deviceId) "📍 Tracking..."
+                                    else "📍 Location",
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                        
+                        // Row 2: Notifications, SOS
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // Notifications button
+                            Button(
+                                enabled = dev.isOnline,
+                                onClick = {
+                                    notifDeviceId = dev.deviceId
+                                    notifDeviceName = dev.deviceName
+                                    notifList = emptyList()
+                                    showNotifDialog = true
+                                    val req = """{"type":"REQUEST_NOTIFICATIONS","toDeviceId":"${dev.deviceId}"}"""
+                                    wsClient?.send(req)
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00897B))
+                            ) { Text("🔔 Notif", fontSize = 11.sp) }
+
+                            // SOS button
+                            Button(
+                                enabled = dev.isOnline,
+                                onClick = {
+                                    // Send SOS to ALL paired devices
+                                    // First grab current location
+                                    try {
+                                        val locClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(ctx)
+                                        if (ctx.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                            locClient.lastLocation.addOnSuccessListener { loc ->
+                                                val lat = loc?.latitude ?: 0.0
+                                                val lng = loc?.longitude ?: 0.0
+                                                // Send SOS to each online device
+                                                devices.filter { it.deviceId != deviceId && it.isOnline }.forEach { d ->
+                                                    val sos = """{"type":"SOS","toDeviceId":"${d.deviceId}","latitude":$lat,"longitude":$lng}"""
+                                                    wsClient?.send(sos)
+                                                }
+                                                Timber.w("[SOS] Emergency SOS sent! lat=$lat lng=$lng")
+                                            }
+                                        } else {
+                                            // No location, send SOS without coordinates
                                             devices.filter { it.deviceId != deviceId && it.isOnline }.forEach { d ->
-                                                val sos = """{"type":"SOS","toDeviceId":"${d.deviceId}","latitude":$lat,"longitude":$lng}"""
+                                                val sos = """{"type":"SOS","toDeviceId":"${d.deviceId}","latitude":0,"longitude":0}"""
                                                 wsClient?.send(sos)
                                             }
-                                            Timber.w("[SOS] Emergency SOS sent! lat=$lat lng=$lng")
                                         }
-                                    } else {
-                                        // No location, send SOS without coordinates
-                                        devices.filter { it.deviceId != deviceId && it.isOnline }.forEach { d ->
-                                            val sos = """{"type":"SOS","toDeviceId":"${d.deviceId}","latitude":0,"longitude":0}"""
-                                            wsClient?.send(sos)
-                                        }
+                                    } catch (e: Exception) {
+                                        Timber.e(e, "[SOS] Failed to send SOS")
                                     }
-                                } catch (e: Exception) {
-                                    Timber.e(e, "[SOS] Failed to send SOS")
-                                }
-                            },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
-                        ) {
-                            Text("🆘 SOS", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
+                            ) {
+                                Text("🆘 SOS", fontSize = 11.sp)
+                            }
                         }
                     }
                 }
@@ -892,7 +944,7 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
     }
 
     // ─── Periodic battery/network broadcast ──────────────────────────────
-    LaunchedEffect(wsClient) {
+    LaunchedEffect(wsClient, devices) {
         val ws = wsClient ?: return@LaunchedEffect
         while (true) {
             kotlinx.coroutines.delay(10000) // every 10 seconds
@@ -911,8 +963,10 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                         else -> "Other"
                     }
                 } ?: "None"
-                val payload = """{"type":"BATTERY_STATUS","battery":$battLevel,"charging":$isCharging,"network":"$netType"}"""
-                ws.send(payload)
+                devices.filter { it.deviceId != deviceId && it.isOnline }.forEach { d ->
+                    val payload = """{"type":"BATTERY_STATUS","toDeviceId":"${d.deviceId}","battery":$battLevel,"charging":$isCharging,"network":"$netType"}"""
+                    ws.send(payload)
+                }
             } catch (_: Exception) {}
         }
     }
@@ -938,6 +992,86 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                     onClick = { showSosAlert = false },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White)
                 ) { Text("Dismiss", color = Color(0xFFB71C1C)) }
+            }
+        )
+    }
+
+    // ─── Notification Dialog ─────────────────────────────────────────────
+    if (showNotifDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showNotifDialog = false
+                val req = """{"type":"STOP_NOTIFICATIONS","toDeviceId":"$notifDeviceId"}"""
+                wsClient?.send(req)
+                notifDeviceId = null
+            },
+            title = { Text("🔔 Notifications - $notifDeviceName", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+            text = {
+                if (notifList.isEmpty()) {
+                    Text("No notifications found or permission not granted on target device.", color = Color.Gray)
+                } else {
+                    androidx.compose.foundation.lazy.LazyColumn(
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(notifList.size) { idx ->
+                            val n = notifList[idx]
+                            val pkg = n.optString("packageName", "App")
+                            val title = n.optString("title", "")
+                            val text = n.optString("text", "")
+                            val subText = n.optString("subText", "")
+                            val time = n.optLong("postTime", 0L)
+                            
+                            val timeStr = if (time > 0) {
+                                val diff = System.currentTimeMillis() - time
+                                when {
+                                    diff < 60000 -> "just now"
+                                    diff < 3600000 -> "${diff / 60000}m ago"
+                                    else -> "${diff / 3600000}h ago"
+                                }
+                            } else ""
+
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(pkg.substringAfterLast("."), fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                                        if (timeStr.isNotEmpty()) {
+                                            Text(timeStr, fontSize = 11.sp, color = Color.Gray)
+                                        }
+                                    }
+                                    if (title.isNotEmpty()) {
+                                        Spacer(Modifier.height(4.dp))
+                                        Text(title, fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                                    }
+                                    if (text.isNotEmpty()) {
+                                        Spacer(Modifier.height(2.dp))
+                                        Text(text, fontSize = 13.sp)
+                                    }
+                                    if (subText.isNotEmpty() && subText != text) {
+                                        Spacer(Modifier.height(2.dp))
+                                        Text(subText, fontSize = 12.sp, color = Color.Gray)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showNotifDialog = false
+                    val req = """{"type":"STOP_NOTIFICATIONS","toDeviceId":"$notifDeviceId"}"""
+                    wsClient?.send(req)
+                    notifDeviceId = null
+                }) {
+                    Text("Stop Watching")
+                }
             }
         )
     }

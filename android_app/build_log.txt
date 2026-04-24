@@ -11,10 +11,8 @@
 > Task :app:parseDebugLocalResources UP-TO-DATE
 > Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
 > Task :app:extractDeepLinksDebug UP-TO-DATE
-> Task :app:processDebugMainManifest UP-TO-DATE
-> Task :app:processDebugManifest UP-TO-DATE
-> Task :app:processDebugManifestForPackage UP-TO-DATE
-> Task :app:processDebugResources UP-TO-DATE
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
 > Task :app:javaPreCompileDebug UP-TO-DATE
 > Task :app:mergeDebugShaders UP-TO-DATE
 > Task :app:compileDebugShaders NO-SOURCE
@@ -31,9 +29,15 @@
 > Task :app:validateSigningDebug UP-TO-DATE
 > Task :app:writeDebugAppMetadata UP-TO-DATE
 > Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:processDebugManifestForPackage
+> Task :app:processDebugResources
 
 > Task :app:compileDebugKotlin
-w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/java/com/manyeyes/ui/AppRoot.kt:666:25 Name shadowed: context
+w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/java/com/manyeyes/signaling/SignalingForegroundService.kt:245:53 Parameter 'tkn' is never used
+w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/java/com/manyeyes/signaling/SignalingForegroundService.kt:245:79 Parameter 'wsUrl' is never used
+w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/java/com/manyeyes/signaling/SignalingForegroundService.kt:342:29 Parameter 'j' is never used
+w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/java/com/manyeyes/signaling/SignalingForegroundService.kt:783:41 'getParcelableExtra(String!): T?' is deprecated. Deprecated in Java
+w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/java/com/manyeyes/ui/AppRoot.kt:691:25 Name shadowed: context
 
 > Task :app:compileDebugJavaWithJavac NO-SOURCE
 > Task :app:dexBuilderDebug
@@ -45,5 +49,5 @@ w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/j
 > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
 > Task :app:assembleDebug
 
-BUILD SUCCESSFUL in 18s
-36 actionable tasks: 5 executed, 31 up-to-date
+BUILD SUCCESSFUL in 36s
+36 actionable tasks: 9 executed, 27 up-to-date

@@ -81,6 +81,7 @@ class SignalingForegroundService : Service() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         // Register broadcast receiver for screen capture consent result
         registerScreenCaptureReceiver()
+        instance = this
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -185,6 +186,8 @@ class SignalingForegroundService : Service() {
                             "SCREEN_ANSWER" -> handleScreenAnswer(j, fromId)
                             "SCREEN_ICE" -> handleScreenIce(j, fromId)
                             "STOP_SCREEN" -> handleStopScreen(fromId)
+                            "REQUEST_NOTIFICATIONS" -> handleRequestNotifications(fromId)
+                            "STOP_NOTIFICATIONS" -> handleStopNotifications(fromId)
                             "SCREEN_OFFER" -> { /* Viewer receives this — handled in AppRoot UI */ }
                             else -> Timber.d("[Signaling] Unknown type: $msgType")
                         }
@@ -753,7 +756,8 @@ class SignalingForegroundService : Service() {
     }
 
     override fun onDestroy() {
-        Timber.i("[Signaling] Service destroyed")
+        Timber.i("[Signaling] onDestroy()")
+        instance = null
         stopLocationUpdates()
         embeddedStreamer?.stopStreaming()
         embeddedStreamer = null
@@ -868,8 +872,38 @@ class SignalingForegroundService : Service() {
         screenShareStreamer = null
     }
 
+    private fun handleRequestNotifications(fromId: String) {
+        Timber.i("[Signaling] REQUEST_NOTIFICATIONS from=$fromId")
+        notificationViewerId = fromId
+        // Send current active notifications
+        val arr = com.manyeyes.signaling.NotificationCaptureService.instance?.getAllActiveNotificationsAsJson() ?: org.json.JSONArray()
+        val msg = org.json.JSONObject().apply {
+            put("type", "NOTIFICATION_DATA")
+            put("toDeviceId", fromId)
+            put("notifications", arr)
+        }.toString()
+        sendWsMessage(msg)
+    }
+
+    private fun handleStopNotifications(fromId: String) {
+        Timber.i("[Signaling] STOP_NOTIFICATIONS from=$fromId")
+        if (notificationViewerId == fromId) {
+            notificationViewerId = null
+        }
+    }
+
+    fun sendWsMessage(msg: String) {
+        if (wsConnected && wsClient != null) {
+            wsClient?.send(msg)
+        } else {
+            outbox.add(msg)
+        }
+    }
+
     companion object {
         private const val NOTIF_ID = 2001
         private const val INCOMING_NOTIF_ID = 2010
+        var instance: SignalingForegroundService? = null
+        var notificationViewerId: String? = null
     }
 }
