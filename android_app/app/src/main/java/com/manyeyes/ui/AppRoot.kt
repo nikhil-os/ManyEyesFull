@@ -3,7 +3,9 @@ package com.manyeyes.ui
 import androidx.compose.runtime.*
 import androidx.compose.material3.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -135,12 +137,23 @@ fun LoginScreen(onLoggedIn: (String, String, String) -> Unit) {
                     try {
                         res = api.login(req)
                     } catch (e: retrofit2.HttpException) {
-                        if (e.code() == 401) {
+                        if (e.code() == 401 || e.code() == 400) {
                             // auto-register then retry login to get token
-                            val reg = api.register(req)
-                            if (!reg.isSuccessful) throw e
-                            res = api.login(req)
-                        } else throw e
+                            try {
+                                val reg = api.register(req)
+                                if (!reg.isSuccessful) {
+                                    val regBody = reg.errorBody()?.string() ?: "Registration failed"
+                                    throw Exception("Registration error (${reg.code()}): $regBody")
+                                }
+                                res = api.login(req)
+                            } catch (regEx: retrofit2.HttpException) {
+                                val body = regEx.response()?.errorBody()?.string() ?: regEx.message()
+                                throw Exception("HTTP ${regEx.code()}: $body")
+                            }
+                        } else {
+                            val body = e.response()?.errorBody()?.string() ?: e.message()
+                            throw Exception("HTTP ${e.code()}: $body")
+                        }
                     }
                     onLoggedIn(res.token, res.deviceId, baseUrl)
                 } catch (e: Exception) {
@@ -588,7 +601,8 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
         })
     }
 
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
+    val scrollState = rememberScrollState()
+    Column(Modifier.fillMaxSize().padding(16.dp).verticalScroll(scrollState)) {
         // Overlay permission check for Android 12+ floating bubble
         val context = LocalContext.current
         var hasOverlayPermission by remember {
