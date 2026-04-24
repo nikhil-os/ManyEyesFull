@@ -33,7 +33,7 @@
 > Task :app:writeDebugSigningConfigVersions UP-TO-DATE
 
 > Task :app:compileDebugKotlin
-w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/java/com/manyeyes/ui/AppRoot.kt:656:25 Name shadowed: context
+w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/java/com/manyeyes/ui/AppRoot.kt:666:25 Name shadowed: context
 
 > Task :app:compileDebugJavaWithJavac NO-SOURCE
 > Task :app:dexBuilderDebug
@@ -45,5 +45,5 @@ w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/j
 > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
 > Task :app:assembleDebug
 
-BUILD SUCCESSFUL in 21s
+BUILD SUCCESSFUL in 18s
 36 actionable tasks: 5 executed, 31 up-to-date

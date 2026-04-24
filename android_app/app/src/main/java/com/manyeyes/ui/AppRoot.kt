@@ -510,7 +510,13 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                             webrtc.createPeer(baseIce, object : org.webrtc.PeerConnection.Observer {
                                 override fun onIceCandidate(candidate: org.webrtc.IceCandidate?) {
                                     candidate ?: return
-                                    val ice = """{"type":"SCREEN_ICE","toDeviceId":"$fromId","sdpMid":"${candidate.sdpMid}","sdpMLineIndex":${candidate.sdpMLineIndex},"candidate":"${candidate.sdp}"}"""
+                                    val ice = org.json.JSONObject().apply {
+                                        put("type", "SCREEN_ICE")
+                                        put("toDeviceId", fromId)
+                                        put("sdpMid", candidate.sdpMid ?: "")
+                                        put("sdpMLineIndex", candidate.sdpMLineIndex)
+                                        put("candidate", candidate.sdp ?: "")
+                                    }.toString()
                                     wsClient?.send(ice)
                                 }
                                 override fun onTrack(transceiver: org.webrtc.RtpTransceiver?) {
@@ -554,7 +560,11 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                             webrtc.setRemoteDescription(org.webrtc.SessionDescription(org.webrtc.SessionDescription.Type.OFFER, sdp))
                             webrtc.createAnswer { answerSdp ->
                                 webrtc.setLocalDescription(answerSdp)
-                                val ans = """{"type":"SCREEN_ANSWER","toDeviceId":"$fromId","sdp":"${answerSdp.description}"}"""
+                                val ans = org.json.JSONObject().apply {
+                                    put("type", "SCREEN_ANSWER")
+                                    put("toDeviceId", fromId)
+                                    put("sdp", answerSdp.description)
+                                }.toString()
                                 wsClient?.send(ans)
                             }
                             webrtcScreenViewer = webrtc
