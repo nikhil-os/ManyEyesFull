@@ -1,5 +1,4 @@
-﻿Starting a Gradle Daemon, 1 busy and 1 incompatible and 2 stopped Daemons could not be reused, use --status for details
-> Task :app:preBuild UP-TO-DATE
+﻿> Task :app:preBuild UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
 > Task :app:checkKotlinGradlePluginConfigurationErrors
@@ -32,8 +31,15 @@
 > Task :app:validateSigningDebug UP-TO-DATE
 > Task :app:writeDebugAppMetadata UP-TO-DATE
 > Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+
 > Task :app:compileDebugKotlin
-w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/java/com/manyeyes/ui/AppRoot.kt:537:25 Name shadowed: context
+w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/java/com/manyeyes/signaling/ScreenShareStreamer.kt:95:9 Parameter 'myDeviceId' is never used
+w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/java/com/manyeyes/signaling/ScreenShareStreamer.kt:96:9 Parameter 'resultCode' is never used
+w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/java/com/manyeyes/signaling/SignalingForegroundService.kt:242:53 Parameter 'tkn' is never used
+w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/java/com/manyeyes/signaling/SignalingForegroundService.kt:242:79 Parameter 'wsUrl' is never used
+w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/java/com/manyeyes/signaling/SignalingForegroundService.kt:339:29 Parameter 'j' is never used
+w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/java/com/manyeyes/signaling/SignalingForegroundService.kt:779:41 'getParcelableExtra(String!): T?' is deprecated. Deprecated in Java
+w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/java/com/manyeyes/ui/AppRoot.kt:642:25 Name shadowed: context
 
 > Task :app:compileDebugJavaWithJavac NO-SOURCE
 > Task :app:dexBuilderDebug
@@ -45,5 +51,5 @@ w: file:///D:/ManyEyesFull-master/ManyEyesFull-master/android_app/app/src/main/j
 > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
 > Task :app:assembleDebug
 
-BUILD SUCCESSFUL in 2m 29s
+BUILD SUCCESSFUL in 27s
 36 actionable tasks: 5 executed, 31 up-to-date

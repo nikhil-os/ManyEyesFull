@@ -236,6 +236,11 @@ class WebRtcManager(private val context: Context, private var externalEglBase: E
         }
     }
 
+    // Accessors for screen sharing (ScreenShareStreamer needs direct access)
+    fun getPeerConnectionFactory(): PeerConnectionFactory? = peerConnectionFactory
+    fun getEglBaseContext(): EglBase.Context? = eglBase?.eglBaseContext
+    fun getPeerConnection(): PeerConnection? = peerConnection
+
     fun dispose() {
         try { videoCapturer?.stopCapture() } catch (_: Exception) {}
         videoCapturer?.dispose()

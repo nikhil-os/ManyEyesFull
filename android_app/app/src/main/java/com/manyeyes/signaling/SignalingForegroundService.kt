@@ -25,6 +25,8 @@ import com.manyeyes.streaming.StreamForegroundService
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
 import org.json.JSONObject
 import timber.log.Timber
 
@@ -57,6 +59,10 @@ class SignalingForegroundService : Service() {
     private var fusedLocationClient: FusedLocationProviderClient? = null
     private var locationCallback: LocationCallback? = null
     private var locationTrackingForDevice: String? = null // which remote device requested our location
+    // Screen sharing
+    private var screenShareStreamer: ScreenShareStreamer? = null
+    private var pendingScreenRemoteId: String? = null
+    private var screenCaptureReceiver: BroadcastReceiver? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -73,6 +79,8 @@ class SignalingForegroundService : Service() {
         }
         // Initialize location client
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        // Register broadcast receiver for screen capture consent result
+        registerScreenCaptureReceiver()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -173,6 +181,11 @@ class SignalingForegroundService : Service() {
                             "REQUEST_LOCATION" -> handleRequestLocation(fromId)
                             "STOP_LOCATION" -> handleStopLocation(fromId)
                             "LOCATION" -> { /* Viewer receives this — handled in AppRoot UI */ }
+                            "REQUEST_SCREEN" -> handleRequestScreen(fromId)
+                            "SCREEN_ANSWER" -> handleScreenAnswer(j, fromId)
+                            "SCREEN_ICE" -> handleScreenIce(j, fromId)
+                            "STOP_SCREEN" -> handleStopScreen(fromId)
+                            "SCREEN_OFFER" -> { /* Viewer receives this — handled in AppRoot UI */ }
                             else -> Timber.d("[Signaling] Unknown type: $msgType")
                         }
                     } catch (t: Throwable) {
@@ -744,6 +757,9 @@ class SignalingForegroundService : Service() {
         stopLocationUpdates()
         embeddedStreamer?.stopStreaming()
         embeddedStreamer = null
+        screenShareStreamer?.stopSharing()
+        screenShareStreamer = null
+        try { screenCaptureReceiver?.let { unregisterReceiver(it) } } catch (_: Exception) {}
         wsClient?.close()
         wsClient = null
         mainHandler.removeCallbacksAndMessages(null)
@@ -751,6 +767,105 @@ class SignalingForegroundService : Service() {
             wakeLock?.release()
         } catch (_: Exception) {}
         super.onDestroy()
+    }
+
+    // ─── Screen Sharing ──────────────────────────────────────────────────
+
+    private fun registerScreenCaptureReceiver() {
+        screenCaptureReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action != com.manyeyes.streaming.ScreenCaptureActivity.ACTION_SCREEN_CAPTURE_RESULT) return
+                val resultCode = intent.getIntExtra(com.manyeyes.streaming.ScreenCaptureActivity.EXTRA_RESULT_CODE, -1)
+                val resultData = intent.getParcelableExtra<Intent>(com.manyeyes.streaming.ScreenCaptureActivity.EXTRA_RESULT_DATA)
+                val remoteId = intent.getStringExtra(com.manyeyes.streaming.ScreenCaptureActivity.EXTRA_REMOTE_DEVICE_ID) ?: ""
+
+                if (resultCode == android.app.Activity.RESULT_OK && resultData != null) {
+                    Timber.i("[Signaling] Screen capture consented for remote=$remoteId")
+
+                    // Upgrade FGS type to include mediaProjection
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            var fgsType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC or
+                                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+                            if (checkSelfPermission(android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                                fgsType = fgsType or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+                            }
+                            if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                                fgsType = fgsType or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+                            }
+                            if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                                fgsType = fgsType or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+                            }
+                            startForeground(NOTIF_ID, buildNotification(), fgsType)
+                            Timber.i("[Signaling] Upgraded FGS type to include mediaProjection")
+                        }
+                    } catch (e: Exception) {
+                        Timber.e(e, "[Signaling] Failed to upgrade FGS for mediaProjection")
+                    }
+
+                    // Start the screen share streamer
+                    val myId = deviceId ?: return
+                    val streamer = ScreenShareStreamer(this@SignalingForegroundService) { type, toId, data ->
+                        val payload = JSONObject().apply {
+                            put("type", type)
+                            put("toDeviceId", toId)
+                            put("fromDeviceId", myId)
+                            data.forEach { (k, v) -> put(k, v) }
+                        }.toString()
+                        if (wsConnected) wsClient?.send(payload) else outbox += payload
+                    }
+                    screenShareStreamer = streamer
+                    streamer.startSharing(remoteId, myId, resultCode, resultData)
+                } else {
+                    Timber.w("[Signaling] Screen capture denied for remote=$remoteId")
+                }
+            }
+        }
+
+        val filter = IntentFilter(com.manyeyes.streaming.ScreenCaptureActivity.ACTION_SCREEN_CAPTURE_RESULT)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(screenCaptureReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(screenCaptureReceiver, filter)
+        }
+        Timber.i("[Signaling] Screen capture broadcast receiver registered")
+    }
+
+    private fun handleRequestScreen(fromId: String) {
+        Timber.i("[Signaling] REQUEST_SCREEN from=$fromId — launching consent dialog")
+        pendingScreenRemoteId = fromId
+
+        // Launch ScreenCaptureActivity to show the consent dialog
+        val captureIntent = Intent(this, com.manyeyes.streaming.ScreenCaptureActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            putExtra(com.manyeyes.streaming.ScreenCaptureActivity.EXTRA_REMOTE_DEVICE_ID, fromId)
+        }
+        startActivity(captureIntent)
+    }
+
+    private fun handleScreenAnswer(j: JSONObject, fromId: String) {
+        val sdp = j.optString("sdp", "")
+        if (sdp.isEmpty()) {
+            Timber.w("[Signaling] SCREEN_ANSWER with empty SDP from=$fromId")
+            return
+        }
+        Timber.i("[Signaling] SCREEN_ANSWER from=$fromId")
+        screenShareStreamer?.handleAnswer(sdp)
+    }
+
+    private fun handleScreenIce(j: JSONObject, fromId: String) {
+        val mid = j.optString("sdpMid", "")
+        val idx = j.optInt("sdpMLineIndex", 0)
+        val cand = j.optString("candidate", "")
+        if (cand.isEmpty()) return
+        Timber.d("[Signaling] SCREEN_ICE from=$fromId mid=$mid")
+        screenShareStreamer?.handleIce(org.webrtc.IceCandidate(mid, idx, cand))
+    }
+
+    private fun handleStopScreen(fromId: String) {
+        Timber.i("[Signaling] STOP_SCREEN from=$fromId — stopping screen share")
+        screenShareStreamer?.stopSharing()
+        screenShareStreamer = null
     }
 
     companion object {

@@ -193,6 +193,11 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
     val remoteBattery = remember { mutableStateMapOf<String, Int>() }       // deviceId -> battery %
     val remoteCharging = remember { mutableStateMapOf<String, Boolean>() }   // deviceId -> isCharging
     val remoteNetwork = remember { mutableStateMapOf<String, String>() }     // deviceId -> network type
+    // Screen sharing state
+    var isViewingScreen by remember { mutableStateOf(false) }
+    var screenStreamerId by remember { mutableStateOf<String?>(null) }
+    var webrtcScreenViewer by remember { mutableStateOf<com.manyeyes.webrtc.WebRtcManager?>(null) }
+    val pendingScreenIce = remember { mutableListOf<org.webrtc.IceCandidate>() }
 
     // Function to send control commands to the streamer via SignalingForegroundService
     fun sendControlCommand(command: String) {
@@ -467,6 +472,106 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                             remoteNetwork[fromId] = j.optString("network", "Unknown")
                             Timber.d("[Viewer] BATTERY_STATUS from=$fromId batt=${remoteBattery[fromId]}% net=${remoteNetwork[fromId]}")
                         }
+                        "SCREEN_OFFER" -> {
+                            val fromId = j.optString("fromDeviceId")
+                            val sdp = j.optString("sdp", "")
+                            Timber.i("[Viewer] SCREEN_OFFER from=$fromId len=${sdp.length}")
+                            if (sdp.isEmpty()) return@onMessage
+
+                            // Clean up existing screen viewer
+                            try { webrtcScreenViewer?.dispose() } catch (_: Exception) {}
+                            webrtcScreenViewer = null
+                            pendingScreenIce.clear()
+                            screenStreamerId = fromId
+
+                            val webrtc = com.manyeyes.webrtc.WebRtcManager(ctx, eglBase)
+                            webrtc.init()
+
+                            // Fetch TURN servers (reuse same instance)
+                            val baseIce = mutableListOf<org.webrtc.PeerConnection.IceServer>()
+                            try {
+                                val extra = webrtc.fetchCloudflareIceServers(com.manyeyes.TurnConfig.CLOUDFLARE_TOKEN, com.manyeyes.TurnConfig.CLOUDFLARE_KEY_ID)
+                                baseIce.addAll(extra)
+                            } catch (_: Exception) {}
+
+                            webrtc.createPeer(baseIce, object : org.webrtc.PeerConnection.Observer {
+                                override fun onIceCandidate(candidate: org.webrtc.IceCandidate?) {
+                                    candidate ?: return
+                                    val ice = """{"type":"SCREEN_ICE","toDeviceId":"$fromId","sdpMid":"${candidate.sdpMid}","sdpMLineIndex":${candidate.sdpMLineIndex},"candidate":"${candidate.sdp}"}"""
+                                    wsClient?.send(ice)
+                                }
+                                override fun onTrack(transceiver: org.webrtc.RtpTransceiver?) {
+                                    val track = transceiver?.receiver?.track()
+                                    if (track is VideoTrack) {
+                                        Timber.i("[Viewer] Screen video track received")
+                                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                            try {
+                                                track.setEnabled(true)
+                                                rendererView?.let { track.addSink(it) }
+                                                isViewingScreen = true
+                                                videoDebug = "Screen sharing active"
+                                            } catch (e: Exception) {
+                                                Timber.e(e, "[Viewer] Failed to attach screen track")
+                                            }
+                                        }
+                                    }
+                                }
+                                override fun onIceConnectionChange(s: org.webrtc.PeerConnection.IceConnectionState?) {
+                                    Timber.i("[Viewer] Screen ICE: $s")
+                                    if (s == org.webrtc.PeerConnection.IceConnectionState.DISCONNECTED ||
+                                        s == org.webrtc.PeerConnection.IceConnectionState.FAILED) {
+                                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                            isViewingScreen = false
+                                            videoDebug = "Screen share ended"
+                                        }
+                                    }
+                                }
+                                override fun onSignalingChange(p0: org.webrtc.PeerConnection.SignalingState?) {}
+                                override fun onIceConnectionReceivingChange(p0: Boolean) {}
+                                override fun onIceGatheringChange(p0: org.webrtc.PeerConnection.IceGatheringState?) {}
+                                override fun onIceCandidatesRemoved(p0: Array<out org.webrtc.IceCandidate>?) {}
+                                override fun onAddStream(p0: org.webrtc.MediaStream?) {}
+                                override fun onRemoveStream(p0: org.webrtc.MediaStream?) {}
+                                override fun onDataChannel(p0: org.webrtc.DataChannel?) {}
+                                override fun onRenegotiationNeeded() {}
+                                override fun onAddTrack(r: org.webrtc.RtpReceiver?, s: Array<out org.webrtc.MediaStream>?) {}
+                            })
+
+                            webrtc.prepareReceivers(receiveAudio = false, receiveVideo = true)
+                            webrtc.setRemoteDescription(org.webrtc.SessionDescription(org.webrtc.SessionDescription.Type.OFFER, sdp))
+                            webrtc.createAnswer { answerSdp ->
+                                webrtc.setLocalDescription(answerSdp)
+                                val ans = """{"type":"SCREEN_ANSWER","toDeviceId":"$fromId","sdp":"${answerSdp.description}"}"""
+                                wsClient?.send(ans)
+                            }
+                            webrtcScreenViewer = webrtc
+
+                            // Apply pending ICE
+                            val iceCopy = pendingScreenIce.toList()
+                            pendingScreenIce.clear()
+                            iceCopy.forEach { webrtc.addIceCandidate(it) }
+                        }
+                        "SCREEN_ICE" -> {
+                            val mid = j.optString("sdpMid", "")
+                            val idx = j.optInt("sdpMLineIndex", 0)
+                            val cand = j.optString("candidate", "")
+                            if (cand.isEmpty()) return@onMessage
+                            val candidate = org.webrtc.IceCandidate(mid, idx, cand)
+                            val rtc = webrtcScreenViewer
+                            if (rtc != null) {
+                                rtc.addIceCandidate(candidate)
+                            } else {
+                                pendingScreenIce.add(candidate)
+                            }
+                        }
+                        "STOP_SCREEN" -> {
+                            Timber.i("[Viewer] STOP_SCREEN received")
+                            try { webrtcScreenViewer?.dispose() } catch (_: Exception) {}
+                            webrtcScreenViewer = null
+                            isViewingScreen = false
+                            screenStreamerId = null
+                            videoDebug = "Screen share ended"
+                        }
                         "PRESENCE" -> {
                             // Refresh list
                             scope.launch { devices = api.devices("Bearer $token") }
@@ -561,27 +666,42 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
         Spacer(Modifier.height(8.dp))
         Text("Video Debug: $videoDebug")
 
-        // Video control buttons - only show when viewing a stream
-        if (isViewingStream) {
+        // Video control buttons - only show when viewing a stream or screen
+        if (isViewingStream || isViewingScreen) {
             Spacer(Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                // Switch Camera button
-                Button(
-                    onClick = { sendControlCommand("SWITCH_CAMERA") },
-                    colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF607D8B))
-                ) {
-                    Text("🔄 Switch Camera")
+                if (isViewingStream) {
+                    // Switch Camera button (only for camera streams)
+                    Button(
+                        onClick = { sendControlCommand("SWITCH_CAMERA") },
+                        colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF607D8B))
+                    ) {
+                        Text("🔄 Switch Camera")
+                    }
                 }
 
-                // Disconnect button
+                // Disconnect/End button
                 Button(
-                    onClick = { disconnectStream() },
+                    onClick = {
+                        if (isViewingScreen) {
+                            // Send STOP_SCREEN to end screen sharing
+                            val stopReq = """{"type":"STOP_SCREEN","toDeviceId":"$screenStreamerId"}"""
+                            wsClient?.send(stopReq)
+                            try { webrtcScreenViewer?.dispose() } catch (_: Exception) {}
+                            webrtcScreenViewer = null
+                            isViewingScreen = false
+                            screenStreamerId = null
+                            videoDebug = "Screen share ended"
+                        } else {
+                            disconnectStream()
+                        }
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFFE53935))
                 ) {
-                    Text("⏹ Disconnect")
+                    Text(if (isViewingScreen) "⏹ End Screen Share" else "⏹ Disconnect")
                 }
             }
         }
@@ -654,7 +774,19 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                             },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
-                        ) { Text("📷 Camera", fontSize = 12.sp) }
+                        ) { Text("📷 Camera", fontSize = 11.sp) }
+
+                        // Screen Share button
+                        Button(
+                            enabled = dev.isOnline,
+                            onClick = {
+                                val req = """{"type":"REQUEST_SCREEN","toDeviceId":"${dev.deviceId}"}"""
+                                wsClient?.send(req)
+                                Timber.i("[Viewer] REQUEST_SCREEN sent to ${dev.deviceId}")
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7B1FA2))
+                        ) { Text("🖥 Screen", fontSize = 11.sp) }
 
                         // Track Location button
                         Button(

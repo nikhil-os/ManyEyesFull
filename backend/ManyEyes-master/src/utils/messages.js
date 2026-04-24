@@ -12,6 +12,11 @@ export const MessageTypes = {
   STOP_LOCATION: "STOP_LOCATION",
   SOS: "SOS",
   BATTERY_STATUS: "BATTERY_STATUS",
+  REQUEST_SCREEN: "REQUEST_SCREEN",
+  SCREEN_OFFER: "SCREEN_OFFER",
+  SCREEN_ANSWER: "SCREEN_ANSWER",
+  SCREEN_ICE: "SCREEN_ICE",
+  STOP_SCREEN: "STOP_SCREEN",
 };
 
 export function makeMessage(type, data = {}) {

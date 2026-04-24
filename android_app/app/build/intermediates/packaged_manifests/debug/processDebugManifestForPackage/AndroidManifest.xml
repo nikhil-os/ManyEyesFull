@@ -29,6 +29,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <!-- Screen sharing permissions -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <!-- Disable camera requirement so app installs on devices without camera -->
     <uses-feature
         android:name="android.hardware.camera"
@@ -89,11 +91,19 @@
             android:taskAffinity=""
             android:theme="@style/Theme.ManyEyes.Floating"
             android:turnScreenOn="true" />
+        <!-- Screen capture consent activity (transparent, auto-finishes) -->
+        <activity
+            android:name="com.manyeyes.streaming.ScreenCaptureActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <!-- Signaling service — declared with ALL types it may need at runtime -->
         <service
             android:name="com.manyeyes.signaling.SignalingForegroundService"
             android:exported="false"
-            android:foregroundServiceType="camera|microphone|dataSync|location" />
+            android:foregroundServiceType="camera|microphone|dataSync|location|mediaProjection" />
         <!-- Stream service (legacy, kept as fallback) -->
         <service
             android:name="com.manyeyes.streaming.StreamForegroundService"
