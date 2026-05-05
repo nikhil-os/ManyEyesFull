@@ -159,8 +159,12 @@ class WebRtcManager(private val context: Context, private var externalEglBase: E
             try {
                 val enumerator = Camera2Enumerator(context)
                 val deviceNames = enumerator.deviceNames
+                // Prefer the back camera so the flashlight is usable from the
+                // moment the stream starts. Fall back to front (single-camera
+                // devices) or whatever is available.
+                val back = deviceNames.firstOrNull { enumerator.isBackFacing(it) }
                 val front = deviceNames.firstOrNull { enumerator.isFrontFacing(it) }
-                val chosen = front ?: deviceNames.firstOrNull()
+                val chosen = back ?: front ?: deviceNames.firstOrNull()
                 if (chosen == null) {
                     Timber.w("No camera device available; skipping video")
                 } else {

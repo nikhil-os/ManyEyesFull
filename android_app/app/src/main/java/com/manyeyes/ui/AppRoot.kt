@@ -211,10 +211,13 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
     var screenStreamerId by remember { mutableStateOf<String?>(null) }
     var webrtcScreenViewer by remember { mutableStateOf<com.manyeyes.webrtc.WebRtcManager?>(null) }
     val pendingScreenIce = remember { mutableListOf<org.webrtc.IceCandidate>() }
-    // Flashlight state — driven entirely by FLASH_STATUS messages from the
-    // streamer device (we never optimistically set it locally).
+    // Flashlight state. Initial defaults match EmbeddedStreamer's new
+    // back-camera-first behaviour so the Flash button is enabled as soon as
+    // a stream starts; the streamer's initial FLASH_STATUS message will
+    // correct these if the physical camera differs (e.g. single-camera
+    // device with only a front lens).
     var isFlashOn by remember { mutableStateOf(false) }
-    var isTargetFrontCamera by remember { mutableStateOf(true) }
+    var isTargetFrontCamera by remember { mutableStateOf(false) }
     // Notification state
     var showNotifDialog by remember { mutableStateOf(false) }
     var notifDeviceId by remember { mutableStateOf<String?>(null) }
@@ -261,6 +264,11 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
         lastStreamerId = null
         videoDebug = "Disconnected"
         status = "Connected"
+        // Reset flash state to match the streamer default (back camera, off)
+        // so the next stream starts with the button in the correct enabled
+        // state before any FLASH_STATUS arrives.
+        isFlashOn = false
+        isTargetFrontCamera = false
 
         // Send DISCONNECT command to streamer
         if (!targetId.isNullOrEmpty()) {

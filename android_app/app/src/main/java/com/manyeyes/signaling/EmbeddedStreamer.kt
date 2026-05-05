@@ -30,8 +30,9 @@ class EmbeddedStreamer(
     private var deviceId: String = ""
     // Flashlight state. Tracked here so the service can report status back to
     // the viewer after every TOGGLE_FLASH and after camera switches (which
-    // force torch off when moving to the front lens).
-    private var isFrontFacing: Boolean = true
+    // force torch off when moving to the front lens). Defaults match
+    // WebRtcManager.createPeer, which now opens the back camera first.
+    private var isFrontFacing: Boolean = false
     private var flashOn: Boolean = false
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -260,7 +261,16 @@ class EmbeddedStreamer(
                     // Send OFFER
                     onSendSignaling("OFFER", remoteDeviceId, mapOf("sdp" to sdp.description))
                     Timber.i("[EmbeddedStreamer] OFFER sent to $remoteDeviceId (total ${System.currentTimeMillis() - startTime}ms)")
-                    
+
+                    // Advertise initial camera facing + flash state so the
+                    // viewer's flashlight button can enable immediately
+                    // (otherwise the viewer would keep its default "front
+                    // camera" assumption until the first user interaction).
+                    onSendSignaling("FLASH_STATUS", remoteDeviceId, mapOf(
+                        "isFrontCamera" to isFrontFacing,
+                        "flashOn" to flashOn
+                    ))
+
                     negotiationInProgress = false
                     isInitializing = false
                     Timber.i("[EmbeddedStreamer] Initialization complete")
@@ -403,7 +413,7 @@ class EmbeddedStreamer(
         isInitializing = false
         // Make sure the torch LED isn't left on after we tear down.
         if (flashOn) { setTorchSafe(false); flashOn = false }
-        isFrontFacing = true
+        isFrontFacing = false
         
         rtcToDispose?.let { rtc ->
             mainHandler.post {

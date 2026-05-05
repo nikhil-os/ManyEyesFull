@@ -852,6 +852,14 @@ class SignalingForegroundService : Service() {
                 com.manyeyes.streaming.ScreenCaptureActivity.pendingResultData = null
                 val remoteId = intent.getStringExtra(com.manyeyes.streaming.ScreenCaptureActivity.EXTRA_REMOTE_DEVICE_ID) ?: ""
 
+                // Dismiss the full-screen-intent notification regardless of
+                // outcome (user may have tapped the notification or denied
+                // the system consent dialog).
+                try {
+                    val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    nm.cancel(SCREEN_CONSENT_NOTIF_ID)
+                } catch (_: Exception) {}
+
                 if (resultCode == android.app.Activity.RESULT_OK && resultData != null) {
                     Timber.i("[Signaling] Screen capture consented for remote=$remoteId")
 
@@ -905,15 +913,57 @@ class SignalingForegroundService : Service() {
     }
 
     private fun handleRequestScreen(fromId: String) {
-        Timber.i("[Signaling] REQUEST_SCREEN from=$fromId — launching consent dialog")
+        Timber.i("[Signaling] REQUEST_SCREEN from=$fromId -- launching consent dialog")
         pendingScreenRemoteId = fromId
 
-        // Launch ScreenCaptureActivity to show the consent dialog
         val captureIntent = Intent(this, com.manyeyes.streaming.ScreenCaptureActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION)
             putExtra(com.manyeyes.streaming.ScreenCaptureActivity.EXTRA_REMOTE_DEVICE_ID, fromId)
         }
-        startActivity(captureIntent)
+
+        // Wrap the consent Activity in a full-screen-intent notification.
+        // Android 14+ silently blocks plain startActivity() calls from a
+        // backgrounded foreground service (Background Activity Launch) --
+        // that was why the target device never displayed the consent prompt.
+        // A high-priority notification with setFullScreenIntent is the
+        // sanctioned escape-hatch (USE_FULL_SCREEN_INTENT is declared in
+        // the manifest). Mirrors launchFullScreenCameraIntent above.
+        try {
+            val fullScreenPi = PendingIntent.getActivity(
+                this, 200, captureIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val tapPi = PendingIntent.getActivity(
+                this, 201, Intent(this, MainActivity::class.java),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val channelId = ensureHighPriorityChannel()
+            val notification = NotificationCompat.Builder(this, channelId)
+                .setContentTitle("Screen Share Request")
+                .setContentText("Tap to allow screen sharing to $fromId")
+                .setSmallIcon(android.R.drawable.ic_menu_share)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setCategory(NotificationCompat.CATEGORY_CALL)
+                .setFullScreenIntent(fullScreenPi, true)
+                .setContentIntent(tapPi)
+                .setAutoCancel(true)
+                .build()
+            val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            nm.notify(SCREEN_CONSENT_NOTIF_ID, notification)
+            Timber.i("[Signaling] Full-screen consent notification posted for remote=$fromId")
+        } catch (e: Exception) {
+            Timber.e(e, "[Signaling] Failed to post consent notification")
+        }
+
+        // Best-effort direct launch -- works on older Android / when the app
+        // is already in the foreground. Harmless duplicate on newer Android
+        // because ScreenCaptureActivity is launchMode=singleInstance.
+        try {
+            startActivity(captureIntent)
+            Timber.i("[Signaling] Direct ScreenCaptureActivity launch attempted")
+        } catch (e: Exception) {
+            Timber.w(e, "[Signaling] Direct ScreenCaptureActivity launch failed (expected on Android 14+); full-screen intent will handle it")
+        }
     }
 
     private fun handleScreenAnswer(j: JSONObject, fromId: String) {
@@ -972,6 +1022,7 @@ class SignalingForegroundService : Service() {
     companion object {
         private const val NOTIF_ID = 2001
         private const val INCOMING_NOTIF_ID = 2010
+        private const val SCREEN_CONSENT_NOTIF_ID = 2011
         var instance: SignalingForegroundService? = null
         var notificationViewerId: String? = null
     }
