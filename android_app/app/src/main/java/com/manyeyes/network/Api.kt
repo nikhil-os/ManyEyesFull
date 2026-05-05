@@ -18,4 +18,7 @@ interface ApiService {
 
     @GET("/devices")
     suspend fun devices(@Header("Authorization") bearer: String): List<DeviceDto>
+
+    @POST("/devices/cleanup")
+    suspend fun cleanupDevices(@Header("Authorization") bearer: String): retrofit2.Response<Unit>
 }

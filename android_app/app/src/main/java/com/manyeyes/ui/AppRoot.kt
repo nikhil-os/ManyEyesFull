@@ -311,7 +311,10 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
     }
 
     LaunchedEffect(Unit) {
-        // Fetch devices list
+        // Clean up duplicate devices on server, then fetch the fresh list
+        try {
+            api.cleanupDevices("Bearer $token")
+        } catch (_: Exception) { /* best-effort cleanup */ }
         try {
             devices = api.devices("Bearer $token")
         } catch (e: Exception) { Timber.e(e) }
@@ -705,6 +708,49 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
             }
         }
 
+        // Notification Listener permission shortcut
+        val hasNotifListenerPermission = remember {
+            mutableStateOf(
+                android.provider.Settings.Secure.getString(
+                    context.contentResolver,
+                    "enabled_notification_listeners"
+                )?.contains(context.packageName) == true
+            )
+        }
+
+        if (!hasNotifListenerPermission.value) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A237E))
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        "🔔 Notification Access Required",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Color.White
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "To stream live notifications from this device, enable 'Notification Access' for ManyEyes.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFB0BEC5)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            val intent = android.content.Intent(
+                                android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS
+                            )
+                            context.startActivity(intent)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF448AFF))
+                    ) {
+                        Text("Open Notification Settings")
+                    }
+                }
+            }
+        }
+
         Text("Status: $status")
         Spacer(Modifier.height(12.dp))
         // Remote video renderer
@@ -794,7 +840,14 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
         Spacer(Modifier.height(12.dp))
         Text("Devices:", fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
-        devices.filter { it.deviceId != deviceId }.forEach { dev ->
+        // Deduplicate: one card per unique deviceName (prefer online entry)
+        val visibleDevices = remember(devices, deviceId) {
+            devices
+                .filter { it.deviceId != deviceId }
+                .groupBy { it.deviceName }
+                .map { (_, group) -> group.firstOrNull { it.isOnline } ?: group.first() }
+        }
+        visibleDevices.forEach { dev ->
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                 colors = CardDefaults.cardColors(

@@ -45,22 +45,34 @@ router.post("/login", async (req, res) => {
   const token = jwt.sign({ email }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
-  const actualDeviceId = deviceId || uuid();
-  let device = await Device.findOne({ deviceId: actualDeviceId });
+  // --- Deduplicate by deviceName ---
+  // 1. If a deviceId was provided, try to find that exact device first
+  let device = deviceId ? await Device.findOne({ deviceId }) : null;
+
+  // 2. If no device found by id, look for an existing device with same email+deviceName
   if (!device) {
+    device = await Device.findOne({ email, deviceName });
+  }
+
+  if (device) {
+    // Reuse the existing device – update it
+    device.deviceName = deviceName;
+    device.isOnline = true;
+    device.lastSeen = new Date();
+    await device.save();
+  } else {
+    // Brand-new device name we haven't seen before
+    const newId = deviceId || uuid();
     device = await Device.create({
-      deviceId: actualDeviceId,
+      deviceId: newId,
       email,
       deviceName,
       isOnline: true,
       lastSeen: new Date(),
     });
-  } else {
-    device.deviceName = deviceName;
-    device.isOnline = true;
-    device.lastSeen = new Date();
-    await device.save();
   }
+
+  const actualDeviceId = device.deviceId;
   const devices = await Device.find({ email });
   return res.json({ token, deviceId: actualDeviceId, devices });
 });
