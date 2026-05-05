@@ -28,12 +28,21 @@ class EmbeddedStreamer(
     private var negotiationInProgress: Boolean = false
     private var isInitializing: Boolean = false
     private var deviceId: String = ""
-    
+    // Flashlight state. Tracked here so the service can report status back to
+    // the viewer after every TOGGLE_FLASH and after camera switches (which
+    // force torch off when moving to the front lens).
+    private var isFrontFacing: Boolean = true
+    private var flashOn: Boolean = false
+
     private val mainHandler = Handler(Looper.getMainLooper())
-    
+
     fun isStreaming(): Boolean = webrtc != null
-    
+
     fun getCurrentRemoteId(): String = currentRemoteId
+
+    fun isFrontFacing(): Boolean = isFrontFacing
+
+    fun isFlashOn(): Boolean = flashOn
     
     /**
      * Start streaming to a remote device
@@ -318,9 +327,60 @@ class EmbeddedStreamer(
      * Switch camera
      */
     fun switchCamera(callback: ((Boolean) -> Unit)? = null) {
-        webrtc?.switchCamera(callback) ?: run {
+        val rtc = webrtc
+        if (rtc == null) {
             Timber.w("[EmbeddedStreamer] Cannot switch camera - not streaming")
             callback?.invoke(false)
+            return
+        }
+        rtc.switchCamera { success ->
+            if (success) {
+                isFrontFacing = !isFrontFacing
+                // Torch only exists on the back lens on most devices; force it
+                // off when we move to the front so the viewer's UI matches
+                // physical state.
+                if (isFrontFacing && flashOn) {
+                    setTorchSafe(false)
+                    flashOn = false
+                }
+            }
+            callback?.invoke(success)
+        }
+    }
+
+    /**
+     * Toggle the back-camera torch. Works whether the WebRTC camera capture
+     * is active or not because Camera2's setTorchMode is a separate request
+     * on the same camera ID. Returns the new flash state (true = on).
+     */
+    fun toggleFlash(): Boolean {
+        val newState = !flashOn
+        val applied = setTorchSafe(newState)
+        flashOn = if (applied) newState else false
+        return flashOn
+    }
+
+    private fun setTorchSafe(enable: Boolean): Boolean {
+        return try {
+            val cm = context.getSystemService(Context.CAMERA_SERVICE)
+                    as android.hardware.camera2.CameraManager
+            for (id in cm.cameraIdList) {
+                val chars = cm.getCameraCharacteristics(id)
+                val facing = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                if (facing != android.hardware.camera2.CameraCharacteristics.LENS_FACING_BACK) continue
+                val hasFlash = chars.get(
+                    android.hardware.camera2.CameraCharacteristics.FLASH_INFO_AVAILABLE
+                ) ?: false
+                if (!hasFlash) continue
+                cm.setTorchMode(id, enable)
+                Timber.i("[EmbeddedStreamer] setTorchMode($enable) on cameraId=$id")
+                return true
+            }
+            Timber.w("[EmbeddedStreamer] No back camera with flash found")
+            false
+        } catch (e: Exception) {
+            Timber.e(e, "[EmbeddedStreamer] setTorchSafe failed")
+            false
         }
     }
     
@@ -341,6 +401,9 @@ class EmbeddedStreamer(
         answerApplied = false
         negotiationInProgress = false
         isInitializing = false
+        // Make sure the torch LED isn't left on after we tear down.
+        if (flashOn) { setTorchSafe(false); flashOn = false }
+        isFrontFacing = true
         
         rtcToDispose?.let { rtc ->
             mainHandler.post {

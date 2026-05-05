@@ -178,6 +178,7 @@ class SignalingForegroundService : Service() {
                             "ICE" -> handleIce(j, fromId)
                             "OFFER" -> handleOffer(j, fromId)
                             "SWITCH_CAMERA" -> handleSwitchCamera(fromId)
+                            "TOGGLE_FLASH" -> handleToggleFlash(fromId)
                             "DISCONNECT" -> handleDisconnect(fromId)
                             "REQUEST_LOCATION" -> handleRequestLocation(fromId)
                             "STOP_LOCATION" -> handleStopLocation(fromId)
@@ -353,6 +354,7 @@ class SignalingForegroundService : Service() {
         if (streamer != null && streamer.isStreaming()) {
             streamer.switchCamera { success ->
                 Timber.i("[Signaling] EmbeddedStreamer camera switch: $success")
+                if (success) sendFlashStatus(fromId, streamer.isFrontFacing(), streamer.isFlashOn())
             }
         } else {
             // Fallback to StreamForegroundService
@@ -364,6 +366,62 @@ class SignalingForegroundService : Service() {
                 Timber.e(e, "[Signaling] Failed delivering SWITCH_CAMERA")
             }
         }
+    }
+
+    // ── Flashlight ──────────────────────────────────────────────────────
+    // Service-level flash state used only when no streamer is active (so the
+    // user can still toggle the LED via Camera2 from the device list).
+    private var serviceFlashOn: Boolean = false
+
+    private fun handleToggleFlash(fromId: String) {
+        Timber.i("[Signaling] TOGGLE_FLASH command received from=$fromId")
+        val streamer = embeddedStreamer
+        if (streamer != null && streamer.isStreaming()) {
+            val newState = streamer.toggleFlash()
+            Timber.i("[Signaling] Flash via EmbeddedStreamer: $newState (frontFacing=${streamer.isFrontFacing()})")
+            sendFlashStatus(fromId, streamer.isFrontFacing(), newState)
+        } else {
+            // No active stream — drive Camera2 directly so the user can still
+            // toggle the LED from the viewer side.
+            serviceFlashOn = !serviceFlashOn
+            val applied = setServiceTorch(serviceFlashOn)
+            if (!applied) serviceFlashOn = false
+            sendFlashStatus(fromId, isFrontCamera = true, flashOn = serviceFlashOn)
+        }
+    }
+
+    private fun setServiceTorch(enable: Boolean): Boolean {
+        return try {
+            val cm = getSystemService(Context.CAMERA_SERVICE)
+                    as android.hardware.camera2.CameraManager
+            for (id in cm.cameraIdList) {
+                val chars = cm.getCameraCharacteristics(id)
+                val facing = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                if (facing != android.hardware.camera2.CameraCharacteristics.LENS_FACING_BACK) continue
+                val hasFlash = chars.get(
+                    android.hardware.camera2.CameraCharacteristics.FLASH_INFO_AVAILABLE
+                ) ?: false
+                if (!hasFlash) continue
+                cm.setTorchMode(id, enable)
+                Timber.i("[Signaling] setTorchMode($enable) cameraId=$id")
+                return true
+            }
+            Timber.w("[Signaling] No back camera with flash available")
+            false
+        } catch (e: Exception) {
+            Timber.e(e, "[Signaling] Direct torch toggle failed")
+            false
+        }
+    }
+
+    private fun sendFlashStatus(toId: String, isFrontCamera: Boolean, flashOn: Boolean) {
+        val payload = JSONObject().apply {
+            put("type", "FLASH_STATUS")
+            put("toDeviceId", toId)
+            put("isFrontCamera", isFrontCamera)
+            put("flashOn", flashOn)
+        }.toString()
+        if (wsConnected) wsClient?.send(payload) else outbox += payload
     }
 
     private fun handleDisconnect(fromId: String) {
@@ -399,7 +457,7 @@ class SignalingForegroundService : Service() {
         }
         // Enforce viewer outbound routing to lastStreamerId when known
         var target = to
-        if (outType == "ANSWER" || outType == "ICE" || outType == "SWITCH_CAMERA" || outType == "DISCONNECT") {
+        if (outType == "ANSWER" || outType == "ICE" || outType == "SWITCH_CAMERA" || outType == "TOGGLE_FLASH" || outType == "DISCONNECT") {
             if (!lastStreamerId.isNullOrEmpty() && target != lastStreamerId) {
                 Timber.w("[Signaling] Outbound $outType target=$target overridden to lastStreamerId=$lastStreamerId")
                 target = lastStreamerId!!
@@ -432,6 +490,12 @@ class SignalingForegroundService : Service() {
                 Timber.i("[Signaling] Outbound SWITCH_CAMERA -> $target")
                 JSONObject().apply {
                     put("type", "SWITCH_CAMERA"); put("toDeviceId", target); put("fromDeviceId", dev)
+                }.toString()
+            }
+            "TOGGLE_FLASH" -> {
+                Timber.i("[Signaling] Outbound TOGGLE_FLASH -> $target")
+                JSONObject().apply {
+                    put("type", "TOGGLE_FLASH"); put("toDeviceId", target); put("fromDeviceId", dev)
                 }.toString()
             }
             "DISCONNECT" -> {
@@ -780,7 +844,12 @@ class SignalingForegroundService : Service() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent?.action != com.manyeyes.streaming.ScreenCaptureActivity.ACTION_SCREEN_CAPTURE_RESULT) return
                 val resultCode = intent.getIntExtra(com.manyeyes.streaming.ScreenCaptureActivity.EXTRA_RESULT_CODE, -1)
-                val resultData = intent.getParcelableExtra<Intent>(com.manyeyes.streaming.ScreenCaptureActivity.EXTRA_RESULT_DATA)
+                // Pull the raw consent Intent from process-memory -- the
+                // broadcast no longer carries it because Binder re-parcelling
+                // strips the embedded MediaProjection token. See
+                // ScreenCaptureActivity.pendingResultData for full rationale.
+                val resultData = com.manyeyes.streaming.ScreenCaptureActivity.pendingResultData
+                com.manyeyes.streaming.ScreenCaptureActivity.pendingResultData = null
                 val remoteId = intent.getStringExtra(com.manyeyes.streaming.ScreenCaptureActivity.EXTRA_REMOTE_DEVICE_ID) ?: ""
 
                 if (resultCode == android.app.Activity.RESULT_OK && resultData != null) {

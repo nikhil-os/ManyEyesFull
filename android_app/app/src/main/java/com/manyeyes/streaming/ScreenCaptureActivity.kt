@@ -20,6 +20,15 @@ class ScreenCaptureActivity : Activity() {
         const val EXTRA_RESULT_CODE = "resultCode"
         const val EXTRA_RESULT_DATA = "resultData"
         const val EXTRA_REMOTE_DEVICE_ID = "remoteDeviceId"
+
+        // Pass the raw consent Intent in process-memory rather than as a
+        // Parcelable broadcast extra. Android's Binder unparcels & re-parcels
+        // the Intent on its way through sendBroadcast(), and that round-trip
+        // strips the embedded MediaProjection token — leaving the receiver
+        // with a permission-less Intent and resulting in zero frames being
+        // captured (visible on the viewer as "Video Debug: Disconnected"
+        // with no SCREEN track ever arriving).
+        var pendingResultData: Intent? = null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,11 +46,13 @@ class ScreenCaptureActivity : Activity() {
             val remoteId = intent?.getStringExtra(EXTRA_REMOTE_DEVICE_ID) ?: ""
             if (resultCode == RESULT_OK && data != null) {
                 Timber.i("[ScreenCapture] User CONSENTED to screen capture for remote=$remoteId")
-                // Send result back to the service via broadcast
+                // Stash the raw Intent in process memory — the broadcast
+                // below carries only primitives so the MediaProjection token
+                // survives intact on the receiving end.
+                pendingResultData = data
                 val resultIntent = Intent(ACTION_SCREEN_CAPTURE_RESULT).apply {
                     setPackage(packageName)
                     putExtra(EXTRA_RESULT_CODE, resultCode)
-                    putExtra(EXTRA_RESULT_DATA, data)
                     putExtra(EXTRA_REMOTE_DEVICE_ID, remoteId)
                 }
                 sendBroadcast(resultIntent)

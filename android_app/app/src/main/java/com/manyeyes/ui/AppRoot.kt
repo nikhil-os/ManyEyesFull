@@ -211,6 +211,10 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
     var screenStreamerId by remember { mutableStateOf<String?>(null) }
     var webrtcScreenViewer by remember { mutableStateOf<com.manyeyes.webrtc.WebRtcManager?>(null) }
     val pendingScreenIce = remember { mutableListOf<org.webrtc.IceCandidate>() }
+    // Flashlight state — driven entirely by FLASH_STATUS messages from the
+    // streamer device (we never optimistically set it locally).
+    var isFlashOn by remember { mutableStateOf(false) }
+    var isTargetFrontCamera by remember { mutableStateOf(true) }
     // Notification state
     var showNotifDialog by remember { mutableStateOf(false) }
     var notifDeviceId by remember { mutableStateOf<String?>(null) }
@@ -490,6 +494,16 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                             remoteNetwork[fromId] = j.optString("network", "Unknown")
                             Timber.d("[Viewer] BATTERY_STATUS from=$fromId batt=${remoteBattery[fromId]}% net=${remoteNetwork[fromId]}")
                         }
+                        "FLASH_STATUS" -> {
+                            // Authoritative flashlight state from the streamer.
+                            val isFront = j.optBoolean("isFrontCamera", true)
+                            val active = j.optBoolean("flashOn", false)
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                isTargetFrontCamera = isFront
+                                isFlashOn = active
+                            }
+                            Timber.i("[Viewer] FLASH_STATUS isFrontCamera=$isFront flashOn=$active")
+                        }
                         "SCREEN_OFFER" -> {
                             val fromId = j.optString("fromDeviceId")
                             val sdp = j.optString("sdp", "")
@@ -729,6 +743,20 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                         colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF607D8B))
                     ) {
                         Text("🔄 Switch Camera")
+                    }
+                    // Flashlight toggle (camera streams only). Disabled when
+                    // the streamer is on its front lens, since most phones
+                    // don't have a front torch.
+                    Button(
+                        onClick = { sendControlCommand("TOGGLE_FLASH") },
+                        enabled = !isTargetFrontCamera,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isFlashOn) androidx.compose.ui.graphics.Color(0xFFFFC107)
+                                              else androidx.compose.ui.graphics.Color(0xFF37474F),
+                            disabledContainerColor = androidx.compose.ui.graphics.Color(0xFF212121)
+                        )
+                    ) {
+                        Text(if (isFlashOn) "💡 Flash ON" else "🔦 Flash")
                     }
                 }
 
