@@ -205,16 +205,17 @@ async function bootstrapAdmin() {
   if (!email || !password) return;
 
   let admin = await User.findOne({ email });
+  const passwordHash = await bcrypt.hash(password, 10);
+  
   if (!admin) {
-    const passwordHash = await bcrypt.hash(password, 10);
     admin = await User.create({ email, passwordHash, isAdmin: true });
     console.log(`[Admin] Created admin user: ${email}`);
-  } else if (!admin.isAdmin) {
-    admin.isAdmin = true;
-    await admin.save();
-    console.log(`[Admin] Upgraded existing user to admin: ${email}`);
   } else {
-    console.log(`[Admin] Admin user exists: ${email}`);
+    // Always ensure the admin has the correct password and isAdmin flag
+    admin.isAdmin = true;
+    admin.passwordHash = passwordHash;
+    await admin.save();
+    console.log(`[Admin] Ensured admin user exists and password is set: ${email}`);
   }
 }
 
