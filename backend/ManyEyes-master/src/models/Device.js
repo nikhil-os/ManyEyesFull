@@ -6,6 +6,7 @@ const deviceSchema = new mongoose.Schema(
     email: { type: String, required: true, index: true },
     deviceName: { type: String, required: true },
     isOnline: { type: Boolean, default: false },
+    isRevoked: { type: Boolean, default: false },
     lastSeen: { type: Date, default: Date.now },
     currentStatus: {
       cameraOn: { type: Boolean, default: false },

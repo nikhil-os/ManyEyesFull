@@ -46,6 +46,7 @@ fun AppRoot() {
     var token by remember { mutableStateOf<String?>(null) }
     var deviceId by remember { mutableStateOf<String?>(null) }
     var baseUrl by remember { mutableStateOf<String?>(null) }
+    var isAdmin by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
@@ -53,6 +54,9 @@ fun AppRoot() {
     }
     LaunchedEffect(Unit) {
         prefs.deviceIdFlow.collect { deviceId = it }
+    }
+    LaunchedEffect(Unit) {
+        prefs.isAdminFlow.collect { isAdmin = it }
     }
     LaunchedEffect(Unit) {
         prefs.baseUrlFlow.collect {
@@ -72,11 +76,12 @@ fun AppRoot() {
     }
 
     if (token == null || deviceId == null || baseUrl == null) {
-        LoginScreen(onLoggedIn = { t, id, url ->
+        LoginScreen(onLoggedIn = { t, id, url, admin ->
             scope.launch {
                 prefs.setToken(t)
                 prefs.setDeviceId(id)
                 prefs.setBaseUrl(url)
+                prefs.setIsAdmin(admin)
                 // Start persistent signaling service so device can be controlled in background
                 val baseWsRaw = url.replaceFirst("http", "ws")
                 val baseWs = if (url.startsWith("https://")) baseWsRaw.replaceFirst("ws://", "wss://") else baseWsRaw
@@ -98,12 +103,17 @@ fun AppRoot() {
             s.putExtra("baseWs", baseWs)
             if (android.os.Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(s) else ctx.startService(s)
         }
-        DeviceListScreen(token!!, deviceId!!, baseUrl!!)
+        if (isAdmin) {
+            AdminDashboardScreen(token!!, deviceId!!, baseUrl!!)
+        } else {
+            DeviceListScreen(token!!, deviceId!!, baseUrl!!)
+        }
     }
 }
 
+
 @Composable
-fun LoginScreen(onLoggedIn: (String, String, String) -> Unit) {
+fun LoginScreen(onLoggedIn: (String, String, String, Boolean) -> Unit) {
     val scope = rememberCoroutineScope()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -155,7 +165,7 @@ fun LoginScreen(onLoggedIn: (String, String, String) -> Unit) {
                             throw Exception("HTTP ${e.code()}: $body")
                         }
                     }
-                    onLoggedIn(res.token, res.deviceId, baseUrl)
+                    onLoggedIn(res.token, res.deviceId, baseUrl, res.isAdmin)
                 } catch (e: Exception) {
                     error = e.message
                 } finally { loading = false }
@@ -661,8 +671,42 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
         })
     }
 
+    // Check if THIS device is revoked by admin
+    var isDeviceRevoked by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        try {
+            val statusRes = api.getDeviceStatus("Bearer $token")
+            val myStatus = statusRes.devices[deviceId]
+            isDeviceRevoked = myStatus?.isRevoked ?: false
+        } catch (_: Exception) { /* best-effort */ }
+    }
+
     val scrollState = rememberScrollState()
     Column(Modifier.fillMaxSize().padding(16.dp).verticalScroll(scrollState)) {
+
+        // ─── REVOKED BANNER ────────────────────────────────────────────
+        if (isDeviceRevoked) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFB71C1C))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        "⛔ ACCESS REVOKED",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Your device has been disabled by the admin. All monitoring features are unavailable. Contact your administrator to restore access.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFFFCDD2)
+                    )
+                }
+            }
+        }
+
         // Overlay permission check for Android 12+ floating bubble
         val context = LocalContext.current
         var hasOverlayPermission by remember {
@@ -910,7 +954,7 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                         ) {
                             // Monitor Camera button
                             Button(
-                                enabled = dev.isOnline,
+                                enabled = dev.isOnline && !isDeviceRevoked,
                                 onClick = {
                                     val req = """{"type":"REQUEST_STREAM","toDeviceId":"${dev.deviceId}"}"""
                                     wsClient?.send(req)
@@ -921,7 +965,7 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
 
                             // Screen Share button
                             Button(
-                                enabled = dev.isOnline,
+                                enabled = dev.isOnline && !isDeviceRevoked,
                                 onClick = {
                                     val req = """{"type":"REQUEST_SCREEN","toDeviceId":"${dev.deviceId}"}"""
                                     wsClient?.send(req)
@@ -933,7 +977,7 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
 
                             // Track Location button
                             Button(
-                                enabled = dev.isOnline,
+                                enabled = dev.isOnline && !isDeviceRevoked,
                                 onClick = {
                                     if (isTrackingLocation && trackingDeviceId == dev.deviceId) {
                                         // Already tracking this device, just show the map
@@ -977,7 +1021,7 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                         ) {
                             // Notifications button
                             Button(
-                                enabled = dev.isOnline,
+                                enabled = dev.isOnline && !isDeviceRevoked,
                                 onClick = {
                                     notifDeviceId = dev.deviceId
                                     notifDeviceName = dev.deviceName
@@ -992,7 +1036,7 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
 
                             // SOS button
                             Button(
-                                enabled = dev.isOnline,
+                                enabled = dev.isOnline && !isDeviceRevoked,
                                 onClick = {
                                     // Send SOS to ALL paired devices
                                     // First grab current location
@@ -1190,6 +1234,214 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String) {
                 locationError = null
             }
         )
+    }
+}
+
+@Composable
+fun AdminDashboardScreen(token: String, deviceId: String, baseUrl: String) {
+    val scope = rememberCoroutineScope()
+    val api = remember(baseUrl) { ServiceBuilder.api(baseUrl) }
+    val ctx = LocalContext.current
+    val baseWs = remember(baseUrl) { baseUrl.replaceFirst("http", "ws") }
+    val secureWs = remember(baseWs) { if (baseWs.startsWith("ws://") && baseUrl.startsWith("https://")) baseWs.replaceFirst("ws://", "wss://") else baseWs }
+
+    var users by remember { mutableStateOf<List<AdminUserDto>>(emptyList()) }
+    var loading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+    // WS for admin to send commands
+    var wsClient by remember { mutableStateOf<WsClient?>(null) }
+    // Track revoked state locally for instant UI feedback
+    val revokedDevices = remember { mutableStateMapOf<String, Boolean>() }
+
+    // Fetch all users on launch
+    LaunchedEffect(Unit) {
+        try {
+            users = api.adminUsers("Bearer $token")
+            users.forEach { u -> u.devices.forEach { d -> revokedDevices[d.deviceId] = d.isRevoked } }
+        } catch (e: Exception) { error = e.message }
+        loading = false
+    }
+
+    // Connect WS for sending commands
+    LaunchedEffect(Unit) {
+        val client = WsClient(secureWs, token, deviceId)
+        wsClient = client
+        client.connect(object : okhttp3.WebSocketListener() {
+            override fun onOpen(webSocket: okhttp3.WebSocket, response: okhttp3.Response) {
+                Timber.i("[Admin WS] Connected")
+            }
+        })
+    }
+
+    val scrollState = rememberScrollState()
+    Column(Modifier.fillMaxSize().padding(16.dp).verticalScroll(scrollState)) {
+        // Admin header
+        Card(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A0033))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("🛡️ Admin Dashboard", color = Color(0xFFFFD700), fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                Spacer(Modifier.height(4.dp))
+                Text("Manage all users and devices", color = Color(0xFFB39DDB), fontSize = 13.sp)
+                Text("${users.size} users • ${users.sumOf { it.devices.size }} devices", color = Color(0xFF9E9E9E), fontSize = 11.sp)
+            }
+        }
+
+        if (loading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+        }
+        if (error != null) {
+            Text("Error: $error", color = Color.Red)
+        }
+
+        // User cards grouped by email
+        users.forEach { user ->
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2E))
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text("👤 ${user.email}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text("${user.devices.size} device(s)", color = Color(0xFF9E9E9E), fontSize = 11.sp)
+                    Spacer(Modifier.height(8.dp))
+
+                    user.devices.forEach { dev ->
+                        val isRevoked = revokedDevices[dev.deviceId] ?: dev.isRevoked
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isRevoked) Color(0xFF3E2723) else Color(0xFF263238)
+                            )
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(dev.deviceName, color = Color.White, fontWeight = FontWeight.Medium, fontSize = 13.sp)
+                                        Text(
+                                            if (dev.isOnline) "● Online" else "○ Offline",
+                                            color = if (dev.isOnline) Color(0xFF4CAF50) else Color.Gray,
+                                            fontSize = 11.sp
+                                        )
+                                    }
+                                    // Revoke/Restore toggle
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            if (isRevoked) "REVOKED" else "ACTIVE",
+                                            color = if (isRevoked) Color(0xFFEF5350) else Color(0xFF4CAF50),
+                                            fontSize = 9.sp, fontWeight = FontWeight.Bold
+                                        )
+                                        Switch(
+                                            checked = !isRevoked,
+                                            onCheckedChange = { enabled ->
+                                                scope.launch {
+                                                    try {
+                                                        if (enabled) {
+                                                            api.restoreDevice("Bearer $token", mapOf("deviceId" to dev.deviceId))
+                                                        } else {
+                                                            api.revokeDevice("Bearer $token", mapOf("deviceId" to dev.deviceId))
+                                                        }
+                                                        revokedDevices[dev.deviceId] = !enabled
+                                                    } catch (e: Exception) {
+                                                        Timber.e(e, "[Admin] Toggle failed")
+                                                    }
+                                                }
+                                            },
+                                            colors = SwitchDefaults.colors(
+                                                checkedThumbColor = Color(0xFF4CAF50),
+                                                checkedTrackColor = Color(0xFF1B5E20),
+                                                uncheckedThumbColor = Color(0xFFEF5350),
+                                                uncheckedTrackColor = Color(0xFF4E342E)
+                                            )
+                                        )
+                                    }
+                                }
+
+                                // Feature buttons (only if device is online and not revoked)
+                                if (dev.isOnline && !isRevoked) {
+                                    Spacer(Modifier.height(8.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Button(
+                                            onClick = {
+                                                val req = """{"type":"REQUEST_STREAM","toDeviceId":"${dev.deviceId}"}"""
+                                                wsClient?.send(req)
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            contentPadding = PaddingValues(4.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
+                                        ) { Text("📷", fontSize = 12.sp) }
+
+                                        Button(
+                                            onClick = {
+                                                val req = """{"type":"REQUEST_SCREEN","toDeviceId":"${dev.deviceId}"}"""
+                                                wsClient?.send(req)
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            contentPadding = PaddingValues(4.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7B1FA2))
+                                        ) { Text("🖥", fontSize = 12.sp) }
+
+                                        Button(
+                                            onClick = {
+                                                val req = """{"type":"REQUEST_LOCATION","toDeviceId":"${dev.deviceId}"}"""
+                                                wsClient?.send(req)
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            contentPadding = PaddingValues(4.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF388E3C))
+                                        ) { Text("📍", fontSize = 12.sp) }
+
+                                        Button(
+                                            onClick = {
+                                                val req = """{"type":"REQUEST_NOTIFICATIONS","toDeviceId":"${dev.deviceId}"}"""
+                                                wsClient?.send(req)
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            contentPadding = PaddingValues(4.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00897B))
+                                        ) { Text("🔔", fontSize = 12.sp) }
+
+                                        Button(
+                                            onClick = {
+                                                val req = """{"type":"SOS","toDeviceId":"${dev.deviceId}","latitude":0,"longitude":0}"""
+                                                wsClient?.send(req)
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            contentPadding = PaddingValues(4.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
+                                        ) { Text("🆘", fontSize = 12.sp) }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Refresh button
+        Spacer(Modifier.height(16.dp))
+        Button(
+            onClick = {
+                loading = true
+                scope.launch {
+                    try {
+                        users = api.adminUsers("Bearer $token")
+                        users.forEach { u -> u.devices.forEach { d -> revokedDevices[d.deviceId] = d.isRevoked } }
+                        error = null
+                    } catch (e: Exception) { error = e.message }
+                    loading = false
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF37474F))
+        ) { Text("🔄 Refresh Users & Devices") }
     }
 }
 

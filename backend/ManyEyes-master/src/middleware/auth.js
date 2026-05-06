@@ -20,3 +20,11 @@ export function decodeToken(token) {
     return null;
   }
 }
+
+export function adminMiddleware(req, res, next) {
+  // Must be called AFTER authMiddleware so req.user exists
+  if (!req.user || !req.user.isAdmin) {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+  next();
+}

@@ -15,6 +15,7 @@ object Keys {
     val deviceId = stringPreferencesKey("deviceId")
     val permissionsGranted = booleanPreferencesKey("permissionsGranted")
     val baseUrl = stringPreferencesKey("baseUrl")
+    val isAdmin = booleanPreferencesKey("isAdmin")
 }
 
 class Prefs(private val context: Context) {
@@ -22,9 +23,11 @@ class Prefs(private val context: Context) {
     val deviceIdFlow: Flow<String?> = context.dataStore.data.map { it[Keys.deviceId] }
     val permissionsGrantedFlow: Flow<Boolean> = context.dataStore.data.map { it[Keys.permissionsGranted] ?: false }
     val baseUrlFlow: Flow<String?> = context.dataStore.data.map { it[Keys.baseUrl] }
+    val isAdminFlow: Flow<Boolean> = context.dataStore.data.map { it[Keys.isAdmin] ?: false }
 
     suspend fun setToken(token: String) { context.dataStore.edit { it[Keys.token] = token } }
     suspend fun setDeviceId(id: String) { context.dataStore.edit { it[Keys.deviceId] = id } }
     suspend fun setPermissionsGranted(granted: Boolean) { context.dataStore.edit { it[Keys.permissionsGranted] = granted } }
     suspend fun setBaseUrl(url: String) { context.dataStore.edit { it[Keys.baseUrl] = url } }
+    suspend fun setIsAdmin(admin: Boolean) { context.dataStore.edit { it[Keys.isAdmin] = admin } }
 }
