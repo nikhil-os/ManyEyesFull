@@ -23,6 +23,7 @@ export const MessageTypes = {
   STOP_NOTIFICATIONS: "STOP_NOTIFICATIONS",
   TOGGLE_FLASH: "TOGGLE_FLASH",
   FLASH_STATUS: "FLASH_STATUS",
+  REVOKE_STATUS: "REVOKE_STATUS",
 };
 
 export function makeMessage(type, data = {}) {
