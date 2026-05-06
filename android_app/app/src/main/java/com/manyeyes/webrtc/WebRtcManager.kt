@@ -240,6 +240,79 @@ class WebRtcManager(private val context: Context, private var externalEglBase: E
         }
     }
 
+    /**
+     * Tries to enable or disable the flashlight via WebRTC's internal capture session
+     * using reflection, since standard WebRTC Android API doesn't expose flash controls.
+     */
+    fun setFlash(flashOn: Boolean): Boolean {
+        val capturer = videoCapturer ?: return false
+        try {
+            // Find currentSession in CameraCapturer
+            var currentSessionField: java.lang.reflect.Field? = null
+            var clazz: Class<*>? = capturer.javaClass
+            while (clazz != null) {
+                try {
+                    currentSessionField = clazz.getDeclaredField("currentSession")
+                    break
+                } catch (e: NoSuchFieldException) {
+                    clazz = clazz.superclass
+                }
+            }
+            if (currentSessionField == null) {
+                Timber.w("Could not find currentSession field")
+                return false
+            }
+            currentSessionField.isAccessible = true
+            val session = currentSessionField.get(capturer) ?: return false
+
+            val sessionClass = session.javaClass
+            if (sessionClass.name.contains("Camera2Session")) {
+                val builderField = sessionClass.getDeclaredField("captureRequestBuilder")
+                builderField.isAccessible = true
+                val builder = builderField.get(session) as android.hardware.camera2.CaptureRequest.Builder
+
+                val captureSessionField = sessionClass.getDeclaredField("captureSession")
+                captureSessionField.isAccessible = true
+                val captureSession = captureSessionField.get(session) as android.hardware.camera2.CameraCaptureSession
+
+                val handlerField = sessionClass.getDeclaredField("cameraThreadHandler")
+                handlerField.isAccessible = true
+                val handler = handlerField.get(session) as android.os.Handler
+
+                if (flashOn) {
+                    builder.set(android.hardware.camera2.CaptureRequest.FLASH_MODE, android.hardware.camera2.CaptureRequest.FLASH_MODE_TORCH)
+                    builder.set(android.hardware.camera2.CaptureRequest.CONTROL_AE_MODE, android.hardware.camera2.CaptureRequest.CONTROL_AE_MODE_ON)
+                } else {
+                    builder.set(android.hardware.camera2.CaptureRequest.FLASH_MODE, android.hardware.camera2.CaptureRequest.FLASH_MODE_OFF)
+                    builder.set(android.hardware.camera2.CaptureRequest.CONTROL_AE_MODE, android.hardware.camera2.CaptureRequest.CONTROL_AE_MODE_ON)
+                }
+
+                handler.post {
+                    try {
+                        captureSession.setRepeatingRequest(builder.build(), null, handler)
+                        Timber.i("WebRTC Camera2Session flash updated: $flashOn")
+                    } catch (e: Exception) {
+                        Timber.e(e, "Failed to apply flash repeating request")
+                    }
+                }
+                return true
+            } else if (sessionClass.name.contains("Camera1Session")) {
+                val cameraField = sessionClass.getDeclaredField("camera")
+                cameraField.isAccessible = true
+                val camera = cameraField.get(session) as android.hardware.Camera
+                val parameters = camera.parameters
+                parameters.flashMode = if (flashOn) android.hardware.Camera.Parameters.FLASH_MODE_TORCH else android.hardware.Camera.Parameters.FLASH_MODE_OFF
+                camera.parameters = parameters
+                Timber.i("WebRTC Camera1Session flash updated: $flashOn")
+                return true
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Reflection to set flash failed")
+        }
+        return false
+    }
+
+
     // Accessors for screen sharing (ScreenShareStreamer needs direct access)
     fun getPeerConnectionFactory(): PeerConnectionFactory? = peerConnectionFactory
     fun getEglBaseContext(): EglBase.Context? = eglBase?.eglBaseContext

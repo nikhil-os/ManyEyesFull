@@ -371,6 +371,12 @@ class EmbeddedStreamer(
     }
 
     private fun setTorchSafe(enable: Boolean): Boolean {
+        // Try to toggle via WebRTC first if stream is active
+        if (webrtc != null && webrtc!!.setFlash(enable)) {
+            return true
+        }
+
+        // Fallback to global CameraManager (works only if camera is NOT in use by WebRTC)
         return try {
             val cm = context.getSystemService(Context.CAMERA_SERVICE)
                     as android.hardware.camera2.CameraManager
