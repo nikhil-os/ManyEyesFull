@@ -30,4 +30,11 @@ class Prefs(private val context: Context) {
     suspend fun setPermissionsGranted(granted: Boolean) { context.dataStore.edit { it[Keys.permissionsGranted] = granted } }
     suspend fun setBaseUrl(url: String) { context.dataStore.edit { it[Keys.baseUrl] = url } }
     suspend fun setIsAdmin(admin: Boolean) { context.dataStore.edit { it[Keys.isAdmin] = admin } }
+    suspend fun clearCredentials() {
+        context.dataStore.edit {
+            it.remove(Keys.token)
+            it.remove(Keys.deviceId)
+            it.remove(Keys.isAdmin)
+        }
+    }
 }

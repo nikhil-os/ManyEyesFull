@@ -75,23 +75,48 @@ fun AppRoot() {
         }
     }
 
+    var isLoginMode by remember { mutableStateOf(true) }
+
     if (token == null || deviceId == null || baseUrl == null) {
-        LoginScreen(onLoggedIn = { t, id, url, admin ->
-            scope.launch {
-                prefs.setToken(t)
-                prefs.setDeviceId(id)
-                prefs.setBaseUrl(url)
-                prefs.setIsAdmin(admin)
-                // Start persistent signaling service so device can be controlled in background
-                val baseWsRaw = url.replaceFirst("http", "ws")
-                val baseWs = if (url.startsWith("https://")) baseWsRaw.replaceFirst("ws://", "wss://") else baseWsRaw
-                val s = Intent(ctx, com.manyeyes.signaling.SignalingForegroundService::class.java)
-                s.putExtra("token", t)
-                s.putExtra("deviceId", id)
-                s.putExtra("baseWs", baseWs)
-                if (android.os.Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(s) else ctx.startService(s)
-            }
-        })
+        if (isLoginMode) {
+            LoginScreen(
+                onLoggedIn = { t, id, url, admin ->
+                    scope.launch {
+                        prefs.setToken(t)
+                        prefs.setDeviceId(id)
+                        prefs.setBaseUrl(url)
+                        prefs.setIsAdmin(admin)
+                        val baseWsRaw = url.replaceFirst("http", "ws")
+                        val baseWs = if (url.startsWith("https://")) baseWsRaw.replaceFirst("ws://", "wss://") else baseWsRaw
+                        val s = Intent(ctx, com.manyeyes.signaling.SignalingForegroundService::class.java)
+                        s.putExtra("token", t)
+                        s.putExtra("deviceId", id)
+                        s.putExtra("baseWs", baseWs)
+                        if (android.os.Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(s) else ctx.startService(s)
+                    }
+                },
+                onNavigateToSignup = { isLoginMode = false }
+            )
+        } else {
+            SignupScreen(
+                onSignedUp = { t, id, url, admin ->
+                    scope.launch {
+                        prefs.setToken(t)
+                        prefs.setDeviceId(id)
+                        prefs.setBaseUrl(url)
+                        prefs.setIsAdmin(admin)
+                        val baseWsRaw = url.replaceFirst("http", "ws")
+                        val baseWs = if (url.startsWith("https://")) baseWsRaw.replaceFirst("ws://", "wss://") else baseWsRaw
+                        val s = Intent(ctx, com.manyeyes.signaling.SignalingForegroundService::class.java)
+                        s.putExtra("token", t)
+                        s.putExtra("deviceId", id)
+                        s.putExtra("baseWs", baseWs)
+                        if (android.os.Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(s) else ctx.startService(s)
+                    }
+                },
+                onNavigateToLogin = { isLoginMode = true }
+            )
+        }
     } else {
         // Ensure background signaling runs even if user reopened the app later
         LaunchedEffect(token, deviceId, baseUrl) {
@@ -103,13 +128,21 @@ fun AppRoot() {
             s.putExtra("baseWs", baseWs)
             if (android.os.Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(s) else ctx.startService(s)
         }
-        DeviceListScreen(token!!, deviceId!!, baseUrl!!, isAdmin)
+        DeviceListScreen(token!!, deviceId!!, baseUrl!!, isAdmin, onLogout = {
+            scope.launch {
+                prefs.clearCredentials()
+                val s = Intent(ctx, com.manyeyes.signaling.SignalingForegroundService::class.java)
+                ctx.stopService(s)
+                token = null
+                deviceId = null
+            }
+        })
     }
 }
 
 
 @Composable
-fun LoginScreen(onLoggedIn: (String, String, String, Boolean) -> Unit) {
+fun LoginScreen(onLoggedIn: (String, String, String, Boolean) -> Unit, onNavigateToSignup: () -> Unit) {
     val scope = rememberCoroutineScope()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -139,41 +172,85 @@ fun LoginScreen(onLoggedIn: (String, String, String, Boolean) -> Unit) {
                 try {
                     val api = ServiceBuilder.api(baseUrl)
                     val req = LoginReq(email, password, deviceName, null)
-                    var res: LoginRes
                     try {
-                        res = api.login(req)
+                        val res = api.login(req)
+                        onLoggedIn(res.token, res.deviceId, baseUrl, res.isAdmin)
                     } catch (e: retrofit2.HttpException) {
-                        if (e.code() == 401 || e.code() == 400) {
-                            // auto-register then retry login to get token
-                            try {
-                                val reg = api.register(req)
-                                if (!reg.isSuccessful) {
-                                    val regBody = reg.errorBody()?.string() ?: "Registration failed"
-                                    throw Exception("Registration error (${reg.code()}): $regBody")
-                                }
-                                res = api.login(req)
-                            } catch (regEx: retrofit2.HttpException) {
-                                val body = regEx.response()?.errorBody()?.string() ?: regEx.message()
-                                throw Exception("HTTP ${regEx.code()}: $body")
-                            }
-                        } else {
-                            val body = e.response()?.errorBody()?.string() ?: e.message()
-                            throw Exception("HTTP ${e.code()}: $body")
-                        }
+                        val body = e.response()?.errorBody()?.string() ?: e.message()
+                        throw Exception("Login Failed (${e.code()}): $body")
                     }
-                    onLoggedIn(res.token, res.deviceId, baseUrl, res.isAdmin)
                 } catch (e: Exception) {
                     error = e.message
                 } finally { loading = false }
             }
         }) { Text(if (loading) "Logging in..." else "Login") }
         Spacer(Modifier.height(8.dp))
+        TextButton(onClick = onNavigateToSignup) {
+            Text("Don't have an account? Sign Up")
+        }
+        Spacer(Modifier.height(8.dp))
         Text("Permissions will be requested on first launch and remembered.")
     }
 }
 
 @Composable
-fun DeviceListScreen(token: String, deviceId: String, baseUrl: String, isAdmin: Boolean = false) {
+fun SignupScreen(onSignedUp: (String, String, String, Boolean) -> Unit, onNavigateToLogin: () -> Unit) {
+    val scope = rememberCoroutineScope()
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var deviceName by remember { mutableStateOf(android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL) }
+    var baseUrl by remember { mutableStateOf("https://manyeyes.onrender.com") }
+    var loading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    Column(
+        modifier = Modifier.fillMaxSize().padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Create Account", style = MaterialTheme.typography.headlineMedium)
+        Spacer(Modifier.height(12.dp))
+        OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = deviceName, onValueChange = { deviceName = it }, label = { Text("Device Name") })
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = baseUrl, onValueChange = { baseUrl = it }, label = { Text("Backend URL") })
+        Spacer(Modifier.height(16.dp))
+        if (error != null) Text(error!!, color = MaterialTheme.colorScheme.error)
+        Button(enabled = !loading, onClick = {
+            loading = true; error = null
+            scope.launch {
+                try {
+                    val api = ServiceBuilder.api(baseUrl)
+                    val req = LoginReq(email, password, deviceName, null)
+                    try {
+                        val reg = api.register(req)
+                        if (!reg.isSuccessful) {
+                            val regBody = reg.errorBody()?.string() ?: "Registration failed"
+                            throw Exception("Registration error (${reg.code()}): $regBody")
+                        }
+                        // Login immediately after signup
+                        val res = api.login(req)
+                        onSignedUp(res.token, res.deviceId, baseUrl, res.isAdmin)
+                    } catch (e: retrofit2.HttpException) {
+                        val body = e.response()?.errorBody()?.string() ?: e.message()
+                        throw Exception("Sign Up Failed (${e.code()}): $body")
+                    }
+                } catch (e: Exception) {
+                    error = e.message
+                } finally { loading = false }
+            }
+        }) { Text(if (loading) "Signing up..." else "Sign Up") }
+        Spacer(Modifier.height(8.dp))
+        TextButton(onClick = onNavigateToLogin) {
+            Text("Already have an account? Login")
+        }
+    }
+}
+
+@Composable
+fun DeviceListScreen(token: String, deviceId: String, baseUrl: String, isAdmin: Boolean = false, onLogout: () -> Unit = {}) {
     val baseWs = remember(baseUrl) { baseUrl.replaceFirst("http", "ws") }
     // If using HTTPS, ws scheme should be wss
     val secureWs = remember(baseWs) { if (baseWs.startsWith("ws://") && baseUrl.startsWith("https://")) baseWs.replaceFirst("ws://", "wss://") else baseWs }
@@ -718,6 +795,22 @@ fun DeviceListScreen(token: String, deviceId: String, baseUrl: String, isAdmin: 
 
     val scrollState = rememberScrollState()
     Column(Modifier.fillMaxSize().padding(16.dp).verticalScroll(scrollState)) {
+
+        // ─── HEADER WITH LOGOUT ──────────────────────────────────────────
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("ManyEyes Dashboard", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Button(
+                onClick = onLogout,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828)),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Text("Logout", color = Color.White, fontSize = 13.sp)
+            }
+        }
 
         // ─── REVOKED BANNER ────────────────────────────────────────────
         if (isDeviceRevoked) {
